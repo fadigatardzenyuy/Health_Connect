@@ -4,21 +4,26 @@
 
 @layer base {
   :root {
-    --primary-color: #28A745;
-    --secondary-color: #17A2B8;
-    --accent-color: #FFC107;
-    --background-color: #F8F9FA;
-    --text-color: #343A40;
+    --primary-color: #28a745;
+    --secondary-color: #17a2b8;
+    --accent-color: #ffc107;
+    --background-color: #f8f9fa;
+    --text-color: #343a40;
   }
 
   body {
-    font-family: 'Open Sans', sans-serif;
+    font-family: "Open Sans", sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Lato', sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Lato", sans-serif;
     color: var(--text-color);
   }
 
@@ -47,12 +52,12 @@
   }
 
   p {
-    font-family: 'Open Sans', sans-serif;
+    font-family: "Open Sans", sans-serif;
     @apply text-base; /* 1rem */
   }
 
   a {
-    font-family: 'Open Sans', sans-serif;
+    font-family: "Open Sans", sans-serif;
     @apply text-base; /* 1rem */
     color: var(--accent-color);
     text-decoration: none;
@@ -66,7 +71,7 @@
 @layer components {
   .button-primary {
     @apply text-white bg-primary hover:bg-green-700 rounded;
-    font-family: 'Open Sans', sans-serif;
+    font-family: "Open Sans", sans-serif;
     @apply text-base; /* 1rem */
     line-height: 1.5rem;
     padding: 0.75rem 1.5rem;
@@ -74,19 +79,22 @@
 
   .button-secondary {
     @apply text-secondary bg-white border border-gray-300 rounded;
-    font-family: 'Open Sans', sans-serif;
+    font-family: "Open Sans", sans-serif;
     @apply text-base; /* 1rem */
     line-height: 1.5rem;
     padding: 0.75rem 1.5rem;
   }
 
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded; font-family: 'Open Sans', sans-serif; font-size: 1rem; line-height: 1.5rem;
+    @apply w-full px-4 py-2 border border-gray-300 rounded;
+    font-family: "Open Sans", sans-serif;
+    font-size: 1rem;
+    line-height: 1.5rem;
   }
 
   .textarea {
     @apply text-gray-700 bg-white border border-gray-300 rounded;
-    font-family: 'Open Sans', sans-serif;
+    font-family: "Open Sans", sans-serif;
     @apply text-base; /* 1rem */
     line-height: 1.5rem;
     padding: 0.75rem;

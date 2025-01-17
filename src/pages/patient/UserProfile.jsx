@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { doctor2, doctor5 } from "../Assets/images";
+import { doctor2, doctor5 } from "../../Assets/images";
 // import { Calendar, MapPin, LinkIcon } from "lucide-react";
 
 const UserProfile = () => {
