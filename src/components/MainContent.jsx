@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Heart,
   MessageCircle,
@@ -10,81 +10,52 @@ import {
   Image,
   Video,
 } from "lucide-react";
+import {
+  createPost,
+  getPosts,
+  likePost,
+  unlikePost,
+  createComment,
+  deletePost,
+} from "../utils/Apis.js";
 
-const initialPosts = [
-  {
-    id: 1,
-    author: "Dr. Sarah Johnson",
-    avatar: "/placeholder.svg?height=40&width=40",
-    content:
-      "Remember to stay hydrated during these hot summer days! Drink at least 8 glasses of water daily.",
-    image: "/placeholder.svg?height=400&width=600",
-    timestamp: "2 hours ago",
-    likes: 45,
-    comments: [],
-    shares: 8,
-    liked: false,
-  },
-  {
-    id: 2,
-    author: "John Doe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    content:
-      "Just finished my first 5K run! Thanks to everyone for the support and motivation.",
-    video: "https://www.example.com/sample-video.mp4",
-    timestamp: "4 hours ago",
-    likes: 89,
-    comments: [],
-    shares: 15,
-    liked: false,
-  },
-  {
-    id: 3,
-    author: "Dr. Michael Brown",
-    avatar: "/placeholder.svg?height=40&width=40",
-    content:
-      "New study shows that regular exercise can significantly reduce the risk of heart disease. Start with just 30 minutes a day!",
-    image: "/placeholder.svg?height=400&width=600",
-    timestamp: "1 day ago",
-    likes: 120,
-    comments: [],
-    shares: 42,
-    liked: false,
-  },
-];
-
-const MainContent = () => {
-  const [posts, setPosts] = useState(initialPosts);
+const MainContent = ({ currentUser }) => {
+  const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState("");
   const [newComments, setNewComments] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const fileInputRef = useRef(null);
   const [mediaPreview, setMediaPreview] = useState(null);
 
-  const handlePostSubmit = (e) => {
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const fetchedPosts = await getPosts();
+      setPosts(fetchedPosts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
+
+  const handlePostSubmit = async (e) => {
     e.preventDefault();
     if (newPost.trim() || mediaPreview) {
-      const newPostObj = {
-        id: posts.length + 1,
-        author: "Current User",
-        avatar: "/placeholder.svg?height=40&width=40",
-        content: newPost,
-        timestamp: "Just now",
-        likes: 0,
-        comments: [],
-        shares: 0,
-        liked: false,
-      };
-      if (mediaPreview) {
-        if (mediaPreview.startsWith("data:image")) {
-          newPostObj.image = mediaPreview;
-        } else if (mediaPreview.startsWith("data:video")) {
-          newPostObj.video = mediaPreview;
-        }
+      try {
+        const createdPost = await createPost(
+          currentUser.id,
+          newPost,
+          mediaPreview?.startsWith("data:image") ? mediaPreview : undefined,
+          mediaPreview?.startsWith("data:video") ? mediaPreview : undefined
+        );
+        setPosts([createdPost, ...posts]);
+        setNewPost("");
+        setMediaPreview(null);
+      } catch (error) {
+        console.error("Error creating post:", error);
       }
-      setPosts([newPostObj, ...posts]);
-      setNewPost("");
-      setMediaPreview(null);
     }
   };
 
@@ -100,49 +71,80 @@ const MainContent = () => {
   };
 
   const handleMediaButtonClick = () => {
-    fileInputRef.current.click();
+    fileInputRef.current?.click();
   };
 
-  const handleLike = (id) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === id
-          ? {
-              ...post,
-              likes: post.liked ? post.likes - 1 : post.likes + 1,
-              liked: !post.liked,
-            }
-          : post
-      )
-    );
+  const handleLike = async (postId) => {
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+
+    const isLiked = post.likes.some((like) => like.user_id === currentUser.id);
+
+    try {
+      if (isLiked) {
+        await unlikePost(currentUser.id, postId);
+        setPosts(
+          posts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: p.likes.filter(
+                    (like) => like.user_id !== currentUser.id
+                  ),
+                }
+              : p
+          )
+        );
+      } else {
+        await likePost(currentUser.id, postId);
+        setPosts(
+          posts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: [
+                    ...p.likes,
+                    { id: Date.now(), user_id: currentUser.id },
+                  ],
+                }
+              : p
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error liking/unliking post:", error);
+    }
   };
 
-  const handleDelete = (id) => {
-    setPosts(posts.filter((post) => post.id !== id));
+  const handleDelete = async (postId) => {
+    try {
+      await deletePost(postId);
+      setPosts(posts.filter((post) => post.id !== postId));
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
   };
 
-  const handleCommentSubmit = (postId) => {
+  const handleCommentSubmit = async (postId) => {
     const commentContent = newComments[postId];
     if (commentContent && commentContent.trim()) {
-      setPosts(
-        posts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                comments: [
-                  ...post.comments,
-                  {
-                    id: post.comments.length + 1,
-                    author: "Current User",
-                    content: commentContent.trim(),
-                    timestamp: "Just now",
-                  },
-                ],
-              }
-            : post
-        )
-      );
-      setNewComments({ ...newComments, [postId]: "" });
+      try {
+        const createdComment = await createComment(
+          currentUser.id,
+          postId,
+          commentContent.trim()
+        );
+        setPosts(
+          posts.map((post) =>
+            post.id === postId
+              ? { ...post, comments: [...post.comments, createdComment] }
+              : post
+          )
+        );
+        setNewComments({ ...newComments, [postId]: "" });
+      } catch (error) {
+        console.error("Error creating comment:", error);
+      }
     }
   };
 
@@ -165,7 +167,7 @@ const MainContent = () => {
             <div className="mt-2 relative">
               {mediaPreview.startsWith("data:image") ? (
                 <img
-                  src={mediaPreview}
+                  src={mediaPreview || "/placeholder.svg"}
                   alt="Preview"
                   className="max-w-full h-auto rounded-lg"
                 />
@@ -215,13 +217,18 @@ const MainContent = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <img
-                src={post.avatar}
-                alt={post.author}
+                src={
+                  post.users.profile_image ||
+                  "/placeholder.svg?height=40&width=40"
+                }
+                alt={post.users.name}
                 className="w-10 h-10 rounded-full mr-2"
               />
               <div>
-                <h3 className="font-semibold">{post.author}</h3>
-                <p className="text-sm text-gray-500">{post.timestamp}</p>
+                <h3 className="font-semibold">{post.users.name}</h3>
+                <p className="text-sm text-gray-500">
+                  {new Date(post.created_at).toLocaleString()}
+                </p>
               </div>
             </div>
             <div className="relative group">
@@ -242,16 +249,16 @@ const MainContent = () => {
             </div>
           </div>
           <p className="mb-4">{post.content}</p>
-          {post.image && (
+          {post.image_url && (
             <img
-              src={post.image}
+              src={post.image_url || "/placeholder.svg"}
               alt="Post content"
               className="w-full h-auto rounded-lg mb-4"
             />
           )}
-          {post.video && (
+          {post.video_url && (
             <video
-              src={post.video}
+              src={post.video_url}
               controls
               className="w-full h-auto rounded-lg mb-4"
             ></video>
@@ -260,13 +267,19 @@ const MainContent = () => {
             <button
               onClick={() => handleLike(post.id)}
               className={`flex items-center space-x-1 ${
-                post.liked ? "text-primary" : "text-gray-500 hover:text-primary"
+                post.likes.some((like) => like.user_id === currentUser.id)
+                  ? "text-primary"
+                  : "text-gray-500 hover:text-primary"
               }`}
             >
               <Heart
-                className={`h-5 w-5 ${post.liked ? "fill-current" : ""}`}
+                className={`h-5 w-5 ${
+                  post.likes.some((like) => like.user_id === currentUser.id)
+                    ? "fill-current"
+                    : ""
+                }`}
               />
-              <span>{post.likes}</span>
+              <span>{post.likes.length}</span>
             </button>
             <button
               onClick={() => toggleComments(post.id)}
@@ -277,7 +290,7 @@ const MainContent = () => {
             </button>
             <button className="flex items-center space-x-1 hover:text-blue-500">
               <Share2 className="h-5 w-5" />
-              <span>{post.shares}</span>
+              <span>0</span>
             </button>
           </div>
           {expandedComments[post.id] && (
@@ -288,9 +301,9 @@ const MainContent = () => {
                   className="bg-gray-100 p-3 rounded-lg mb-2"
                 >
                   <div className="flex justify-between">
-                    <span className="font-semibold">{comment.author}</span>
+                    <span className="font-semibold">{comment.users.name}</span>
                     <span className="text-xs text-gray-500">
-                      {comment.timestamp}
+                      {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
                   <p className="text-sm mt-1">{comment.content}</p>

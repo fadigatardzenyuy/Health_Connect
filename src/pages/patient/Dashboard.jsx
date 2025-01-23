@@ -1,9 +1,26 @@
-import React from "react";
-import LeftSidebar from "../../components/LeftSidebar";
-import MainContent from "../../components/MainContent";
-import RightSidebar from "../../components/RightSidebar";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../../utils/SupaBaseClient";
+import LeftSidebar from "./components/LeftSidebar";
+import MainContent from "./components/MainContent";
+import RightSidebar from "./components/RightSidebar";
 
 const Dashboard = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    fetchUser();
+  }, []);
+
+  if (!currentUser) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="flex flex-col lg:flex-row">
       <div className="lg:w-1/4 lg:sticky lg:top-20 lg:h-screen overflow-y-auto">
