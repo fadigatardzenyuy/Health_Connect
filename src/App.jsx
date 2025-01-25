@@ -1,10 +1,14 @@
 import React from "react";
-import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
-import { ClerkProvider } from "@clerk/clerk-react";
+import {
+  Outlet,
+  RouterProvider,
+  createBrowserRouter,
+  Navigate,
+} from "react-router-dom";
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 import Navbar from "./components/Navbar";
 import BottomNavigation from "./components/BottomNavigation";
-import ProtectedRoute from "./components/ProtecteRoute"; // Fixed typo in import
-import Layout from "./components/Layout";
+import Onboarding from "./pages/patient/Onboarding";
 
 // Patient Components
 import Dashboard from "./pages/patient/Dashboard";
@@ -12,7 +16,7 @@ import AppointmentForm from "./pages/patient/Appointment";
 import ProfileEdit from "./pages/patient/ProfileEdit";
 import MedicalReportPurchase from "./components/MedicalReport";
 import UserProfile from "./pages/patient/UserProfile";
-import Onboarding from "./pages/patient/Onboarding";
+import ChatPage from "./pages/patient/ChatBot";
 
 // Admin Components
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -23,6 +27,7 @@ import PatientList from "./pages/admin/PatientList";
 import Settings from "./pages/admin/Settings";
 import SignUpPage from "./components/SignUp";
 import SignInPage from "./components/Login";
+import Layout from "./components/Layout";
 
 // Layout component for users
 const UserLayout = () => (
@@ -45,21 +50,50 @@ const AdminLayout = () => (
   </div>
 );
 
+// Route Protection Wrappers
+const ProtectedRoute = ({ children }) => (
+  <>
+    <SignedIn>{children}</SignedIn>
+    <SignedOut>
+      <Navigate to="/signin" replace />
+    </SignedOut>
+  </>
+);
+
 // Define your routes
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Onboarding />,
+  },
+  {
+    path: "/signup",
+    element: <SignUpPage />,
+  },
+  {
+    path: "/signin",
+    element: <SignInPage />,
+  },
   {
     path: "/user",
     element: <UserLayout />,
     children: [
       {
-        path: "",
+        index: true,
         element: (
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
         ),
       },
-      { path: "book-appointment", element: <AppointmentForm /> },
+      {
+        path: "book-appointment",
+        element: (
+          <ProtectedRoute>
+            <AppointmentForm />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "profile",
         element: (
@@ -84,6 +118,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "chat",
+        element: (
+          <ProtectedRoute>
+            <ChatPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
@@ -91,48 +133,63 @@ const router = createBrowserRouter([
     element: <AdminLayout />,
     children: [
       {
+        index: true,
+        element: <Navigate to="dashboard" replace />,
+      },
+      {
         path: "dashboard",
-        element: <AdminDashboard />,
+        element: (
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "appointments",
-        element: <Appointments />,
+        element: (
+          <ProtectedRoute>
+            <Appointments />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "video-consultations",
-        element: <VideoConsultations />,
+        element: (
+          <ProtectedRoute>
+            <VideoConsultations />
+          </ProtectedRoute>
+        ),
       },
-      { path: "medical-records", element: <MedicalRecords /> },
+      {
+        path: "medical-records",
+        element: (
+          <ProtectedRoute>
+            <MedicalRecords />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "patients",
-        element: <PatientList />,
+        element: (
+          <ProtectedRoute>
+            <PatientList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "settings",
-        element: <Settings />,
+        element: (
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        ),
       },
     ],
-  },
-  {
-    path: "/onboarding",
-    element: <Onboarding />,
-  },
-  {
-    path: "/signup",
-    element: <SignUpPage />,
-  },
-  {
-    path: "/signin",
-    element: <SignInPage />,
   },
 ]);
 
 const App = () => {
-  return (
-    <div className="App">
-      <RouterProvider router={router} />
-    </div>
-  );
+  return <RouterProvider router={router} />;
 };
 
 export default App;
