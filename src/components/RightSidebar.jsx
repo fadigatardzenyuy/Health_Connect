@@ -1,6 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  ChevronRight,
+  MessageCircle,
+} from "lucide-react";
 
 const appointments = [
   {
@@ -38,6 +44,17 @@ const hospitalUpdates = [
     content: "Join us this Saturday for a comprehensive health screening.",
   },
 ];
+
+const AssistantIcon = () => {
+  return (
+    <Link
+      to="/chat"
+      className="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full p-3 shadow-lg cursor-pointer hover:bg-blue-700 transition duration-300"
+    >
+      <MessageCircle className="h-6 w-6" />
+    </Link>
+  );
+};
 
 const RightSidebar = () => {
   return (
@@ -98,6 +115,9 @@ const RightSidebar = () => {
           ))}
         </div>
       </div>
+
+      {/* Assistant Icon */}
+      <AssistantIcon />
     </aside>
   );
 };

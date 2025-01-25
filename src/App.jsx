@@ -3,7 +3,7 @@ import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 import Navbar from "./components/Navbar";
 import BottomNavigation from "./components/BottomNavigation";
-import ProtectedRoute from "./components/ProtecteRoute"; // Fixed typo in import
+import ProtectedRoute from "./components/ProtecteRoute";
 import Layout from "./components/Layout";
 
 // Patient Components
@@ -23,6 +23,7 @@ import PatientList from "./pages/admin/PatientList";
 import Settings from "./pages/admin/Settings";
 import SignUpPage from "./components/SignUp";
 import SignInPage from "./components/Login";
+import ChatPage from "./pages/patient/ChatBot";
 
 // Layout component for users
 const UserLayout = () => (
@@ -81,6 +82,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MedicalReportPurchase />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "chat",
+        element: (
+          <ProtectedRoute>
+            <ChatPage />
           </ProtectedRoute>
         ),
       },
