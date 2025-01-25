@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, Button } from "@mui/material";
 import { Calendar, Clock, Users, Activity } from "lucide-react";
 import AnalyticsChart from "../../components/AnalyricsChart";
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   const stats = [
     {
       title: "Total Appointments",

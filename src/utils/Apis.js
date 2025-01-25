@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase } from "./SupaBaseClient.js";
 
 export async function createPost(userId, content, imageUrl, videoUrl) {
     const { data, error } = await supabase

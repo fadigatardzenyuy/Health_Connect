@@ -1,16 +1,38 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, Bell, MessageCircle } from "lucide-react";
-import { doctor4 } from "../Assets/images"; // Fallback image
 import {
   SignedIn,
   SignedOut,
   SignOutButton,
   useUser,
-} from "@clerk/clerk-react"; // Import useUser hook
+} from "@clerk/clerk-react";
+import { supabase } from "../utils/SupaBaseClient";
 
 const Navbar = () => {
-  const { user } = useUser(); // Fetch user data
+  const { user } = useUser();
+
+  useEffect(() => {
+    const syncUserWithSupabase = async () => {
+      if (user) {
+        const { data, error } = await supabase.from("users").upsert([
+          {
+            id: user.id,
+            username: user.username || user.firstName,
+            email: user.email,
+            name: user.firstName,
+            profile_image: user.profileImageUrl,
+          },
+        ]);
+
+        if (error) {
+          console.error("Error syncing user:", error);
+        }
+      }
+    };
+
+    syncUserWithSupabase();
+  }, [user]);
 
   return (
     <nav className="bg-white shadow-md fixed top-0 left-0 right-0 z-10">
@@ -46,7 +68,7 @@ const Navbar = () => {
               <Link to="/profile">
                 <img
                   className="h-8 w-8 rounded-full"
-                  src={user?.profileImageUrl || doctor4} // Use the profile image or fallback
+                  src={user?.profileImageUrl || "/path/to/default/image.jpg"}
                   alt="Profile"
                 />
               </Link>
