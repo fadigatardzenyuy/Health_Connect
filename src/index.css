@@ -4,112 +4,35 @@
 
 @layer base {
   :root {
-    --primary-color: #28a745;
-    --secondary-color: #17a2b8;
-    --accent-color: #ffc107;
-    --background-color: #f8f9fa;
-    --text-color: #343a40;
-  }
-
-  body {
-    font-family: "Open Sans", sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: "Lato", sans-serif;
-    color: var(--text-color);
-  }
-
-  h1 {
-    @apply text-5xl; /* 3rem */
-  }
-
-  h2 {
-    @apply text-4xl; /* 2.25rem */
-  }
-
-  h3 {
-    @apply text-3xl; /* 1.875rem */
-  }
-
-  h4 {
-    @apply text-2xl; /* 1.5rem */
-  }
-
-  h5 {
-    @apply text-xl; /* 1.25rem */
-  }
-
-  h6 {
-    @apply text-lg; /* 1.125rem */
-  }
-
-  p {
-    font-family: "Open Sans", sans-serif;
-    @apply text-base; /* 1rem */
-  }
-
-  a {
-    font-family: "Open Sans", sans-serif;
-    @apply text-base; /* 1rem */
-    color: var(--accent-color);
-    text-decoration: none;
-  }
-
-  a:hover {
-    color: var(--primary-color);
+    --background: 220 33% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 201 96% 32%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 199 89% 48%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 142 71% 45%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 201 96% 32%;
+    --radius: 0.75rem;
   }
 }
 
-@layer components {
-  .button-primary {
-    @apply text-white bg-primary hover:bg-green-700 rounded;
-    font-family: "Open Sans", sans-serif;
-    @apply text-base; /* 1rem */
-    line-height: 1.5rem;
-    padding: 0.75rem 1.5rem;
+@layer base {
+  * {
+    @apply border-border;
   }
-
-  .button-secondary {
-    @apply text-secondary bg-white border border-gray-300 rounded;
-    font-family: "Open Sans", sans-serif;
-    @apply text-base; /* 1rem */
-    line-height: 1.5rem;
-    padding: 0.75rem 1.5rem;
-  }
-
-  .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded;
-    font-family: "Open Sans", sans-serif;
-    font-size: 1rem;
-    line-height: 1.5rem;
-  }
-
-  .textarea {
-    @apply text-gray-700 bg-white border border-gray-300 rounded;
-    font-family: "Open Sans", sans-serif;
-    @apply text-base; /* 1rem */
-    line-height: 1.5rem;
-    padding: 0.75rem;
-    min-height: 100px;
-  }
-
-  .card {
-    @apply bg-white shadow-lg rounded-lg p-5 mb-5;
-  }
-
-  .navbar {
-    @apply bg-primary text-white p-4 shadow-md;
-  }
-
-  .footer {
-    @apply bg-secondary text-white p-4 mt-5;
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
