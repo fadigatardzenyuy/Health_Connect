@@ -1,20 +1,18 @@
+// Import necessary libraries
 import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
-import "./index.css";
-import { ClerkProvider } from "@clerk/clerk-react";
+import ReactDOM from "react-dom/client"; // Change this import
+import App from "./App";
+// import "./index.css"; // Adjust the path as necessary
 
-// Import your Publishable Key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// Get the root element
+const container = document.getElementById("app");
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Add your Clerk Publishable Key to the .env.local file");
-}
+// Create a root
+const root = ReactDOM.createRoot(container); // Use createRoot here
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+// Render your App
+root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <App />
-    </ClerkProvider>
+    <App />
   </React.StrictMode>
 );
