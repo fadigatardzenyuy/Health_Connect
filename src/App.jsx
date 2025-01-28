@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createBrowserRouter,
   RouterProvider,
-  Route,
   Navigate,
 } from "react-router-dom";
 import Index from "./pages/Index";
@@ -13,10 +12,13 @@ import VideoConsultation from "./pages/VideoConsultation";
 import AudioConsultation from "./pages/AudioConsultation";
 import ConsultationBooking from "./pages/ConsultationBooking";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import Messages from "./pages/Messages";
 import Onboarding from "./pages/Onboarding";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import "./index.css";
+import EPrescriptions from "./pages/EPrescriptions";
+import "./index.css"; // Ensure to include your CSS
+import { Analytics } from "@vercel/analytics/react";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -25,7 +27,11 @@ const queryClient = new QueryClient();
 const routes = [
   {
     path: "/",
-    element: <Navigate to="/onboarding" replace />,
+    element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: "/dashboard",
+    element: <Index />,
   },
   {
     path: "/onboarding",
@@ -40,8 +46,8 @@ const routes = [
     element: <SignUp />,
   },
   {
-    path: "/dashboard",
-    element: <Index />,
+    path: "/messages",
+    element: <Messages />,
   },
   {
     path: "/video-consultation",
@@ -55,25 +61,25 @@ const routes = [
     path: "/consultation-booking",
     element: <ConsultationBooking />,
   },
-  // Uncomment if needed
-  // {
-  //   path: "/doctor-dashboard",
-  //   element: <DoctorDashboard />,
-  // },
+  {
+    path: "/doctor-dashboard",
+    element: <DoctorDashboard />,
+  },
+  {
+    path: "/prescriptions",
+    element: <EPrescriptions />,
+  },
 ];
 
-// Create a browser router with the future flags enabled
-const router = createBrowserRouter(routes, {
-  future: {
-    v7_relativeSplatPath: true, // Enable the relative splat path flag
-  },
-});
+// Create a browser router
+const router = createBrowserRouter(routes);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <Analytics />
       <RouterProvider router={router} />
     </TooltipProvider>
   </QueryClientProvider>
