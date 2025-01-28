@@ -63,7 +63,7 @@ export function Layout({ children }) {
               </Sheet>
               <Link to="/" className="flex items-center">
                 <h1 className="text-xl font-bold text-primary truncate">
-                  Cameroon Health Connect
+                  Health Connect
                 </h1>
               </Link>
             </div>

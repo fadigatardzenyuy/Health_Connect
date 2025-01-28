@@ -14,6 +14,10 @@ const SignUp = () => {
       title: "Coming Soon",
       description: "Sign up functionality will be available soon!",
     });
+
+    setTimeout(() => {
+      navigate("/dashboard"); // Redirect to the dashboard
+    }, 1000);
   };
 
   return (

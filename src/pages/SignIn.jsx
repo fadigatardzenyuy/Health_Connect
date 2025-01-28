@@ -10,10 +10,17 @@ const SignIn = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Here you would typically handle authentication logic
+    // For demonstration, we'll just show a toast and navigate to the dashboard
     toast({
       title: "Coming Soon",
       description: "Sign in functionality will be available soon!",
     });
+
+    // Simulating successful sign in and redirecting to dashboard
+    setTimeout(() => {
+      navigate("/dashboard"); // Redirect to the dashboard
+    }, 1000); // Optional delay for demonstration
   };
 
   return (

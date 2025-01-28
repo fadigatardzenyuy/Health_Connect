@@ -27,7 +27,7 @@ const queryClient = new QueryClient();
 const routes = [
   {
     path: "/",
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to="/onboarding" replace />,
   },
   {
     path: "/dashboard",
