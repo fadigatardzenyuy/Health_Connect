@@ -19,6 +19,7 @@ import SignUp from "./pages/SignUp";
 import EPrescriptions from "./pages/EPrescriptions";
 import "./index.css"; // Ensure to include your CSS
 import { Analytics } from "@vercel/analytics/react";
+import UserProfile from "./pages/UserProfile";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const routes = [
     path: "/prescriptions",
     element: <EPrescriptions />,
   },
+  { path: "/profile", element: <UserProfile /> },
 ];
 
 // Create a browser router
