@@ -6,9 +6,15 @@ import { AppointmentsSidebar } from "@/components/AppointmentsSidebar";
 const Index = () => {
   return (
     <Layout>
-      <Sidebar />
-      <MainFeed />
-      <AppointmentsSidebar />
+      <div className="col-span-12 lg:col-span-3 xl:col-span-2">
+        <Sidebar />
+      </div>
+      <div className="col-span-12 lg:col-span-6 xl:col-span-7">
+        <MainFeed />
+      </div>
+      <div className="col-span-12 lg:col-span-3">
+        <AppointmentsSidebar />
+      </div>
     </Layout>
   );
 };

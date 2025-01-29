@@ -30,21 +30,17 @@ export function Sidebar() {
   ];
 
   return (
-    <div className="col-span-3 space-y-6">
+    <div className="space-y-6 sticky top-24">
       <div className="bg-white rounded-lg p-4 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Friends</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="flex flex-wrap gap-2">
           {friends.map((friend) => (
-            <div
-              key={friend.id}
-              className="relative flex flex-col items-center"
-            >
+            <div key={friend.id} className="relative">
               <img
                 src={friend.image}
                 alt={friend.name}
-                className="w-16 h-16 rounded-full mb-2"
+                className="w-12 h-12 rounded-full"
               />
-              <span className="font-medium">{friend.name}</span>
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
             </div>
           ))}
@@ -53,17 +49,19 @@ export function Sidebar() {
 
       <div className="bg-white rounded-lg p-4 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Recent Chats</h2>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-4">
           {recentChats.map((chat) => (
-            <div key={chat.id} className="flex items-start gap-3 p-2 border-b">
+            <div key={chat.id} className="flex items-start gap-3">
               <img
                 src={`https://ui-avatars.com/api/?name=${chat.name}`}
                 alt={chat.name}
-                className="w-12 h-12 rounded-full"
+                className="w-10 h-10 rounded-full"
               />
               <div>
                 <h3 className="font-medium">{chat.name}</h3>
-                <p className="text-sm text-gray-500">{chat.message}</p>
+                <p className="text-sm text-gray-500 line-clamp-1">
+                  {chat.message}
+                </p>
               </div>
             </div>
           ))}
