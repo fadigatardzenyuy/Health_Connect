@@ -107,7 +107,7 @@ export function Layout({ children }) {
 
             <Link to="/" className="flex items-center">
               <h1 className="text-xl md:text-2xl font-bold text-primary">
-                Cameroon Health Connect
+                Health Connect
               </h1>
             </Link>
 
@@ -141,72 +141,27 @@ export function Layout({ children }) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Dialog
-                    open={isEditingProfile}
-                    onOpenChange={setIsEditingProfile}
-                  >
-                    <DialogTrigger asChild>
-                      <DropdownMenuItem>
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Edit Profile</span>
-                      </DropdownMenuItem>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit Profile</DialogTitle>
-                      </DialogHeader>
-                      <form
-                        onSubmit={handleProfileUpdate}
-                        className="space-y-4"
-                      >
-                        <div className="space-y-2">
-                          <label htmlFor="name" className="text-sm font-medium">
-                            Name
-                          </label>
-                          <Input
-                            id="name"
-                            name="name"
-                            defaultValue={userData.name}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label
-                            htmlFor="email"
-                            className="text-sm font-medium"
-                          >
-                            Email
-                          </label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            defaultValue={userData.email}
-                            required
-                          />
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsEditingProfile(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button type="submit">Save Changes</Button>
-                        </div>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                  <Link to="/profile">
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Edit Profile</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <Link to="/settings">
+                      <DropdownMenuItem>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Setting</span>
+                      </DropdownMenuItem>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
+                  <Link to="/signin">
+                    <DropdownMenuItem className="text-red-600">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </Link>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
