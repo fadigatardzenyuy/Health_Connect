@@ -7,14 +7,15 @@ import {
   StopCircle,
   Play,
   Pause,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-export function ChatInterface() {
+export function ChatInterface({ friend, onBack }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -22,6 +23,7 @@ export function ChatInterface() {
   const { toast } = useToast();
   const audioRef = useRef(null);
   const chunksRef = useRef([]);
+  const scrollAreaRef = useRef(null);
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
@@ -42,6 +44,14 @@ export function ChatInterface() {
       title: "Message sent",
       description: "Your message has been sent successfully.",
     });
+
+    // Scroll to bottom after sending message
+    setTimeout(() => {
+      scrollAreaRef.current?.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 100);
   };
 
   const startRecording = async () => {
@@ -66,6 +76,7 @@ export function ChatInterface() {
           timestamp: new Date(),
           status: "sent",
           type: "voice",
+          duration: 0, // In a real app, you'd calculate this
         };
 
         setMessages((prev) => [...prev, message]);
@@ -140,35 +151,66 @@ export function ChatInterface() {
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto h-[600px] flex flex-col">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold">Messages</CardTitle>
-      </CardHeader>
+    <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-white">
+      {/* Chat Header */}
+      <div className="flex items-center gap-4 p-4 border-b bg-white/80 backdrop-blur-sm">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="md:hidden"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <img
+              src={friend.avatar}
+              alt={friend.name}
+              className="w-10 h-10 rounded-full"
+            />
+            {friend.online && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+            )}
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">{friend.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {friend.online ? "Online" : "Offline"}
+            </p>
+          </div>
+        </div>
+      </div>
 
-      <ScrollArea className="flex-1 p-4">
+      {/* Messages Area */}
+      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${
+              className={cn(
+                "flex",
                 message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
+              )}
             >
               <div
-                className={`max-w-[70%] rounded-lg p-3 ${
+                className={cn(
+                  "max-w-[70%] rounded-2xl p-3 shadow-sm",
                   message.sender === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
+                    ? "bg-primary text-primary-foreground rounded-br-none"
+                    : "bg-gray-100 text-gray-900 rounded-bl-none"
+                )}
               >
-                {message.type === "text" && <p>{message.content}</p>}
+                {message.type === "text" && (
+                  <p className="leading-relaxed">{message.content}</p>
+                )}
                 {message.type === "voice" && (
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => togglePlayVoiceMessage(message.id)}
-                      className="h-8 w-8"
+                      className="h-8 w-8 hover:bg-white/20"
                     >
                       {isPlaying === message.id ? (
                         <Pause className="h-4 w-4" />
@@ -186,14 +228,17 @@ export function ChatInterface() {
                     <a
                       href={message.content}
                       download={message.fileName}
-                      className="text-sm underline"
+                      className="text-sm underline hover:no-underline"
                     >
                       {message.fileName}
                     </a>
                   </div>
                 )}
                 <div className="text-xs mt-1 opacity-70">
-                  {message.timestamp.toLocaleTimeString()}
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                   {message.status === "read" && " ✓✓"}
                 </div>
               </div>
@@ -202,13 +247,14 @@ export function ChatInterface() {
         </div>
       </ScrollArea>
 
-      <CardContent className="border-t p-4">
-        <div className="flex items-center gap-2">
+      {/* Input Area */}
+      <div className="border-t bg-white p-4">
+        <div className="flex items-center gap-2 max-w-4xl mx-auto">
           <Button
             variant="ghost"
             size="icon"
             onClick={handleAttachment}
-            className="shrink-0"
+            className="shrink-0 text-muted-foreground hover:text-gray-900"
           >
             <Paperclip className="h-5 w-5" />
           </Button>
@@ -216,7 +262,7 @@ export function ChatInterface() {
             variant="ghost"
             size="icon"
             onClick={handleAttachment}
-            className="shrink-0"
+            className="shrink-0 text-muted-foreground hover:text-gray-900"
           >
             <Image className="h-5 w-5" />
           </Button>
@@ -231,7 +277,12 @@ export function ChatInterface() {
             variant="ghost"
             size="icon"
             onClick={handleRecordVoice}
-            className={`shrink-0 ${isRecording ? "text-red-500" : ""}`}
+            className={cn(
+              "shrink-0",
+              isRecording
+                ? "text-red-500 hover:text-red-600"
+                : "text-muted-foreground hover:text-gray-900"
+            )}
           >
             {isRecording ? (
               <StopCircle className="h-5 w-5" />
@@ -243,7 +294,7 @@ export function ChatInterface() {
             <Send className="h-5 w-5" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
