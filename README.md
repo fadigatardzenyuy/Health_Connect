@@ -96,7 +96,7 @@
 This project utilizes the following technologies:
 
 - **Vite**: Build tool and development server.
-- **TypeScript**: Typed superset of JavaScript.
+- **JavaScript**: The language of the web.
 - **React**: Library for building user interfaces.
 - **shadcn-ui**: UI component library for React.
 - **Tailwind CSS**: Utility-first CSS framework for styling.
