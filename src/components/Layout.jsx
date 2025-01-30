@@ -119,7 +119,7 @@ export function Layout({ children }) {
 
                 <Link to="/" className="flex items-center">
                   <h1 className="text-xl md:text-2xl font-bold text-primary">
-                    Cameroon Health Connect
+                    Health Connect
                   </h1>
                 </Link>
 
