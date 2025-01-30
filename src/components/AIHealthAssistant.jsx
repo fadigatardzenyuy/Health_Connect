@@ -38,7 +38,7 @@ const AIHealthAssistant = () => {
                                     console.log('Starting AI chat');
                                 }}
                             >
-                                Chat with AI
+                                CH AI Consult
                             </Button>
                             <Button
                                 variant="outline"
