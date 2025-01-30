@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { RiskAssessment } from "@/components/AIFeatures/PredictiveAnalytics/RiskAssessment";
 import { OutbreakDetection } from "@/components/AIFeatures/PredictiveAnalytics/OutbreakDetection";
 import { Heart, Stethoscope, Calendar, FileText, MessageSquare, Users, Shield, Activity, ArrowRight } from 'lucide-react';
+import AIHealthAssistant from '../components/AIHealthAssistant';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -174,6 +175,7 @@ const Onboarding = () => {
           </div>
         </div>
       </div>
+      <AIHealthAssistant />
     </div>
   );
 };
