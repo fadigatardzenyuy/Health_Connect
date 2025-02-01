@@ -62,7 +62,7 @@ const SignUp = () => {
       <div className="hidden md:flex w-1/2 bg-gradient-to-r from-blue-600 to-purple-700 justify-center items-center p-8 relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <img
-            src="../assets/image5.jpeg"
+            src="../assets/image3.jpeg"
             alt="Background"
             className="w-full h-full object-cover"
           />
