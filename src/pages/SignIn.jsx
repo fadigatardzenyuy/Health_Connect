@@ -154,7 +154,7 @@ const SignIn = () => {
       <div className="hidden md:flex w-1/2 bg-gradient-to-r from-blue-600 to-purple-700 justify-center items-center p-8 relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <img
-            src="/path/to/health-background.jpg"
+            src="../assets/image5.jpeg"
             alt="Background"
             className="w-full h-full object-cover"
           />
@@ -198,12 +198,6 @@ const SignIn = () => {
             </div>
             <div className="mt-2 font-medium">- Jane D.</div>
           </div>
-
-          <img
-            src="/path/to/your/image.jpg" // Replace with your image path
-            alt="Health Platform"
-            className="mt-4 rounded-lg shadow-lg"
-          />
         </div>
       </div>
     </div>
