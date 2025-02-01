@@ -79,7 +79,7 @@ const Onboarding = () => {
                     </li>
                   </ul>
                   <Button
-                    onClick={() => navigate("/signup")}
+                    onClick={() => navigate("/signup?role=patient")}
                     className="w-full bg-primary hover:bg-primary/90"
                   >
                     Sign Up as Patient
@@ -108,7 +108,7 @@ const Onboarding = () => {
                     </li>
                   </ul>
                   <Button
-                    onClick={() => navigate("/signup")}
+                    onClick={() => navigate("/signup?role=doctor")}
                     variant="outline"
                     className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white"
                   >

@@ -17,10 +17,11 @@ import Onboarding from "./pages/Onboarding";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import EPrescriptions from "./pages/EPrescriptions";
-import "./index.css"; // Ensure to include your CSS
-import { Analytics } from "@vercel/analytics/react";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
+import { AuthProvider } from "@/contexts/AuthContext"; // Import the AuthProvider
+import "./index.css"; // Ensure to include your CSS
+import { Analytics } from "@vercel/analytics/react";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -71,8 +72,14 @@ const routes = [
     path: "/prescriptions",
     element: <EPrescriptions />,
   },
-  { path: "/profile", element: <UserProfile /> },
-  { path: "/settings", element: <Settings /> },
+  {
+    path: "/profile",
+    element: <UserProfile />,
+  },
+  {
+    path: "/settings",
+    element: <Settings />,
+  },
 ];
 
 // Create a browser router
@@ -80,12 +87,16 @@ const router = createBrowserRouter(routes);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Analytics />
-      <RouterProvider router={router} />
-    </TooltipProvider>
+    <AuthProvider>
+      {" "}
+      {/* Wrap your application with AuthProvider */}
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Analytics />
+        <RouterProvider router={router} />
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

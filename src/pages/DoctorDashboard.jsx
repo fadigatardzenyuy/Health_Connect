@@ -1,16 +1,42 @@
 import { Layout } from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Calendar, 
-  Users, 
-  Clock, 
-  Activity,
-  Calendar as CalendarIcon,
-  User
-} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Users, Clock, Calendar, Activity, Shield } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { StatsCard } from "@/components/dashboard/StatsCard";
+import { AppointmentList } from "@/components/dashboard/AppointmentList";
+import { PatientList } from "@/components/dashboard/PatientList";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const DoctorDashboard = () => {
+  const { user, isDoctor, isVerifiedDoctor } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [doctorCode, setDoctorCode] = useState("");
+
+  useEffect(() => {
+    if (!isDoctor) {
+      navigate("/dashboard");
+      toast({
+        title: "Access Denied",
+        description: "Only doctors can access this dashboard.",
+        variant: "destructive",
+      });
+    }
+  }, [isDoctor, navigate, toast]);
+
+  const handleVerifyCode = () => {
+    // Add verification logic here
+    toast({
+      title: "Verification in Progress",
+      description: "Your doctor code is being verified...",
+    });
+  };
+
   const stats = [
     {
       title: "Total Patients",
@@ -34,120 +60,78 @@ const DoctorDashboard = () => {
     },
   ];
 
+  if (!isVerifiedDoctor) {
+    return (
+      <Layout>
+        <div className="col-span-12">
+          <Card className="w-full max-w-md mx-auto mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-6 h-6 text-primary" />
+                Doctor Verification Required
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Please enter your doctor verification code to access the
+                dashboard.
+              </p>
+              <div className="space-y-2">
+                <Input
+                  type="text"
+                  placeholder="Enter your doctor code"
+                  value={doctorCode}
+                  onChange={(e) => setDoctorCode(e.target.value)}
+                />
+                <Button className="w-full" onClick={handleVerifyCode}>
+                  Verify Code
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="col-span-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Doctor Dashboard</h1>
-          <p className="text-muted-foreground">Manage your patients and appointments</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-primary">
+              Doctor Dashboard
+            </h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+              Verified Doctor
+            </span>
+          </div>
+          <p className="text-muted-foreground">Welcome back, {user?.name}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat) => (
-            <Card key={stat.title}>
-              <CardContent className="flex items-center p-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mr-4">
-                  <stat.icon className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                  <h3 className="text-2xl font-bold">{stat.value}</h3>
-                </div>
-              </CardContent>
-            </Card>
+            <StatsCard
+              key={stat.title}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+            />
           ))}
         </div>
 
-        <Tabs defaultValue="appointments" className="w-full">
+        <Tabs defaultValue="appointments" className="space-y-6">
           <TabsList>
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
             <TabsTrigger value="patients">Patients</TabsTrigger>
-            <TabsTrigger value="consultations">Consultations</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="appointments">
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Appointments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Patient Name {i + 1}</h4>
-                          <p className="text-sm text-muted-foreground">General Checkup</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span>Today, 2:00 PM</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <AppointmentList />
           </TabsContent>
-          
+
           <TabsContent value="patients">
-            <Card>
-              <CardHeader>
-                <CardTitle>Patient List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Patient Name {i + 1}</h4>
-                          <p className="text-sm text-muted-foreground">Last visit: 3 days ago</p>
-                        </div>
-                      </div>
-                      <button className="text-sm text-primary hover:underline">
-                        View Details
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="consultations">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Consultations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Patient Name {i + 1}</h4>
-                          <p className="text-sm text-muted-foreground">Video Consultation</p>
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Completed on March 15, 2024
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <PatientList />
           </TabsContent>
         </Tabs>
       </div>

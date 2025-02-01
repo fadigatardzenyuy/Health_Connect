@@ -1,12 +1,12 @@
-# Health Bride
+# Health Connect
 
 ## Overview
 
-**Health Bride** is a comprehensive web application designed to facilitate health and wellness management. By integrating telehealth services, digital health resources, and a robust health information hub, Health Bride empowers users to take charge of their health while connecting seamlessly with healthcare professionals.
+**Health Connect** is a comprehensive web application designed to facilitate health and wellness management. By integrating telehealth services, digital health resources, and a robust health information hub, Health Connect empowers users to take charge of their health while connecting seamlessly with healthcare professionals.
 
 ## Project Info
 
-**Live Demo**: [(https://health-connect-pi.vercel.app/onboarding)]
+**Live Demo**: [(https://health-connect-pi.vercel.app/)]
 
 ## Table of Contents
 

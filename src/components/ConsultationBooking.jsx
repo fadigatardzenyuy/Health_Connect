@@ -5,12 +5,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { VideoPreview } from "./consultation/VideoPreview";
 import { ConsultationForm } from "./consultation/ConsultationForm";
 import { TimeSlotPicker } from "./consultation/TimeSlotPicker";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { AlertCircle } from "lucide-react";
 
 export function ConsultationBooking() {
   const [selectedDate, setSelectedDate] = useState();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleBooking = (data) => {
     console.log("Consultation booked:", data);
@@ -19,6 +22,24 @@ export function ConsultationBooking() {
       description: "Your consultation has been scheduled successfully.",
     });
   };
+
+  if (user?.role === "doctor") {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
+        <Card className="bg-white shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <AlertCircle className="w-6 h-6" />
+              <p>
+                Doctors cannot book consultations. Please use the doctor
+                dashboard to manage your appointments.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">

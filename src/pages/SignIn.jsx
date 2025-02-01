@@ -4,21 +4,40 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Mail, Facebook, Twitter } from "lucide-react"; // Import relevant icons
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast({
-      title: "Coming Soon",
-      description: "Sign in functionality will be available soon!",
-    });
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email");
+    const password = formData.get("password");
 
-    setTimeout(() => {
-      navigate("/dashboard"); // Redirect to the dashboard
-    }, 1000);
+    try {
+      await login(email, password);
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSocialSignIn = (provider) => {
@@ -41,7 +60,7 @@ const SignIn = () => {
             Sign in to your account
           </h2>
 
-          <div className="mt-4 bg-white py-6 px-4 shadow-lg rounded-lg ">
+          <div className="mt-4 bg-white py-6 px-4 shadow-lg rounded-lg">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="email" className="text-gray-700">
@@ -72,15 +91,13 @@ const SignIn = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="text-sm">
-                  <Button
-                    variant="link"
-                    className="font-medium text-blue-600 hover:text-blue-500 transition duration-200"
-                    onClick={() => navigate("/forgot-password")}
-                  >
-                    Forgot your password?
-                  </Button>
-                </div>
+                <Button
+                  variant="link"
+                  className="text-sm text-primary p-0"
+                  onClick={() => navigate("/forgot-password")}
+                >
+                  Forgot your password?
+                </Button>
               </div>
 
               <Button
@@ -117,10 +134,10 @@ const SignIn = () => {
               <Button
                 variant="outline"
                 className="flex items-center justify-center w-full border border-blue-400 text-blue-400 hover:bg-blue-100 transition duration-200"
-                onClick={() => handleSocialSignIn("X")}
+                onClick={() => handleSocialSignIn("Twitter")}
               >
                 <Twitter className="w-5 h-5 mr-2" />
-                Sign in with X
+                Sign in with Twitter
               </Button>
             </div>
 
@@ -131,7 +148,7 @@ const SignIn = () => {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white text-gray-500">
-                    Already have an account?
+                    Don't have an account?
                   </span>
                 </div>
               </div>

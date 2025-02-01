@@ -1,4 +1,4 @@
-import { Image, Video, Send, MessageSquare, Star } from "lucide-react";
+import { Image, Video, Send, MessageSquare, Star, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,10 +8,12 @@ import { SymptomChecker } from "./AIFeatures/SymptomChecker";
 import { HealthAssistant } from "./AIFeatures/HealthAssistant";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function MainFeed() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isDoctor } = useAuth();
 
   return (
     <div className="col-span-12 md:col-span-6 space-y-4">
@@ -33,6 +35,14 @@ export function MainFeed() {
           </TabsContent>
 
           <TabsContent value="post" className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              {user?.role === "doctor" && user?.isVerified && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  <Shield className="w-3 h-3 mr-1" />
+                  Verified Doctor
+                </span>
+              )}
+            </div>
             <Textarea
               placeholder="Share your health journey or ask a question..."
               className="w-full mb-4 resize-none"

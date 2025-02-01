@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-
+import { MobileNav } from "./MobileNav";
+import { DashboardSwitcher } from "./DashboardSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { MobileNav } from "./MobiveNav";
 
 export function Layout({ children }) {
   const isMobile = useIsMobile();
@@ -117,11 +117,14 @@ export function Layout({ children }) {
                   </SheetContent>
                 </Sheet>
 
-                <Link to="/" className="flex items-center">
-                  <h1 className="text-xl md:text-2xl font-bold text-primary">
-                    Health Connect
-                  </h1>
-                </Link>
+                <div className="flex items-center gap-4">
+                  <Link to="/" className="flex items-center">
+                    <h1 className="text-xl md:text-2xl font-bold text-primary">
+                      Health Connect
+                    </h1>
+                  </Link>
+                  <DashboardSwitcher />
+                </div>
 
                 <div className="flex items-center space-x-4">
                   <input

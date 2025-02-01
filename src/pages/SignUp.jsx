@@ -1,24 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Mail, Facebook, Twitter } from "lucide-react"; // Import relevant icons
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role") || "patient";
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast({
-      title: "Coming Soon",
-      description: "Sign up functionality will be available soon!",
-    });
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email");
+    const password = formData.get("password");
 
-    setTimeout(() => {
-      navigate("/dashboard"); // Redirect to the dashboard
-    }, 1000);
+    try {
+      await login(email, password);
+      toast({
+        title: "Account created successfully",
+        description:
+          role === "doctor"
+            ? "Please complete your doctor verification process"
+            : "Welcome to Health Connect!",
+      });
+      navigate(role === "doctor" ? "/doctor-dashboard" : "/dashboard");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during sign up. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSocialSignIn = (provider) => {
@@ -38,7 +62,7 @@ const SignUp = () => {
       <div className="hidden md:flex w-1/2 bg-gradient-to-r from-blue-600 to-purple-700 justify-center items-center p-8 relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <img
-            src="/path/to/health-background.jpg"
+            src="../assets/image5.jpeg"
             alt="Background"
             className="w-full h-full object-cover"
           />
@@ -126,6 +150,13 @@ const SignUp = () => {
                   className="mt-1"
                 />
               </div>
+
+              {role === "doctor" && (
+                <div>
+                  <Label htmlFor="license">Medical License Number</Label>
+                  <Input id="license" name="license" type="text" required />
+                </div>
+              )}
 
               <Button
                 type="submit"
