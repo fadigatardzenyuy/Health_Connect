@@ -108,6 +108,12 @@ export function Layout({ children }) {
                         Book Consultation
                       </Link>
                       <Link
+                        to="/medical-history"
+                        className="text-lg font-medium hover:text-primary"
+                      >
+                        Medical History
+                      </Link>
+                      <Link
                         to="/doctor-dashboard"
                         className="text-lg font-medium hover:text-primary"
                       >
@@ -120,7 +126,7 @@ export function Layout({ children }) {
                 <div className="flex items-center gap-4">
                   <Link to="/" className="flex items-center">
                     <h1 className="text-xl md:text-2xl font-bold text-primary">
-                      Health Connect
+                      Cameroon Health Connect
                     </h1>
                   </Link>
                   <DashboardSwitcher />

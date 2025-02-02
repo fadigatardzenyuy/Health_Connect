@@ -125,11 +125,11 @@ const Onboarding = () => {
             </div>
 
             <div className="text-center">
-              <p className="text-gray-600 mb-4">Already have an account?</p>
+              <p className="text-white-600 mb-4">Already have an account?</p>
               <Button
                 variant="ghost"
                 onClick={() => navigate("/signin")}
-                className="text-primary hover:text-primary/90 hover:bg-primary/10"
+                className="text-white hover:text-primary/90 hover:bg-primary/10"
               >
                 Sign In
               </Button>

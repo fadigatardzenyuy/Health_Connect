@@ -1,25 +1,49 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { VideoPreview } from "./consultation/VideoPreview";
 import { ConsultationForm } from "./consultation/ConsultationForm";
 import { TimeSlotPicker } from "./consultation/TimeSlotPicker";
+import { PrescriptionForm } from "./consultation/PrescriptionForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function ConsultationBooking() {
   const [selectedDate, setSelectedDate] = useState();
+  const [selectedTime, setSelectedTime] = useState();
   const { toast } = useToast();
   const { user } = useAuth();
 
   const handleBooking = (data) => {
-    console.log("Consultation booked:", data);
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: "Incomplete Booking",
+        description:
+          "Please select both a date and time for your consultation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const bookingData = {
+      ...data,
+      date: selectedDate,
+      time: selectedTime,
+    };
+
+    console.log("Consultation booked:", bookingData);
     toast({
       title: "Consultation Booked",
       description: "Your consultation has been scheduled successfully.",
+    });
+  };
+
+  const handlePrescription = (data) => {
+    console.log("Prescription created:", data);
+    toast({
+      title: "Prescription Created",
+      description: "The prescription has been created successfully.",
     });
   };
 
@@ -27,14 +51,33 @@ export function ConsultationBooking() {
     return (
       <div className="w-full max-w-4xl mx-auto px-4 py-8">
         <Card className="bg-white shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 text-muted-foreground">
-              <AlertCircle className="w-6 h-6" />
-              <p>
-                Doctors cannot book consultations. Please use the doctor
-                dashboard to manage your appointments.
-              </p>
-            </div>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-primary">
+              Doctor Dashboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="consultations" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="consultations">
+                  Upcoming Consultations
+                </TabsTrigger>
+                <TabsTrigger value="prescriptions">
+                  Write Prescription
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="consultations">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Today's Schedule</h3>
+                  <p className="text-muted-foreground">
+                    No consultations scheduled for today.
+                  </p>
+                </div>
+              </TabsContent>
+              <TabsContent value="prescriptions">
+                <PrescriptionForm onSubmit={handlePrescription} />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
@@ -56,7 +99,10 @@ export function ConsultationBooking() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
               <VideoPreview />
-              <TimeSlotPicker onTimeSelect={(time) => console.log(time)} />
+              <TimeSlotPicker
+                onTimeSelect={setSelectedTime}
+                selectedTime={selectedTime}
+              />
             </div>
             <div className="space-y-6">
               <Calendar
