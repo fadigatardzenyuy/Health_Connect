@@ -5,12 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Users, Clock, Calendar, Activity, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { StatsCard } from "@/components/dashboard/StatsCard";
+// import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AppointmentList } from "@/components/dashboard/AppointmentList";
 import { PatientList } from "@/components/dashboard/PatientList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StatsCard } from "../components/Dashboard/StatsCard";
 
 const DoctorDashboard = () => {
   const { user, isDoctor, isVerifiedDoctor } = useAuth();
