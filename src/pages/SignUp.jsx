@@ -11,23 +11,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") || "patient";
-  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email");
     const password = formData.get("password");
+    const fullName = formData.get("name");
+    const license = formData.get("license");
 
     try {
-      await login(email, password);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+            ...(role === "doctor" && { license_number: license }),
+          },
+        },
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Account created successfully",
         description:
@@ -35,11 +49,15 @@ const SignUp = () => {
             ? "Please complete your doctor verification process"
             : "Welcome to Health Connect!",
       });
+
       navigate(role === "doctor" ? "/doctor-dashboard" : "/dashboard");
     } catch (error) {
+      console.error("Signup error:", error);
       toast({
         title: "Error",
-        description: "An error occurred during sign up. Please try again.",
+        description:
+          error.message ||
+          "An error occurred during sign up. Please try again.",
         variant: "destructive",
       });
     }

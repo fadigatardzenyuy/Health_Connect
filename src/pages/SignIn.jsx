@@ -12,11 +12,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,21 +25,36 @@ const SignIn = () => {
     const password = formData.get("password");
 
     try {
-      await login(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
-      navigate("/dashboard");
+
+      // Redirect based on user role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      navigate(profile?.role === "doctor" ? "/doctor-dashboard" : "/dashboard");
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
-        description: "Invalid email or password. Please try again.",
+        description:
+          error.message || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     }
   };
-
   const handleSocialSignIn = (provider) => {
     toast({
       title: "Coming Soon",
@@ -61,33 +76,15 @@ const SignIn = () => {
           </h2>
 
           <div className="mt-4 bg-white py-6 px-4 shadow-lg rounded-lg">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="email" className="text-gray-700">
-                  Email address
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="mt-1 w-full p-3 border border-gray-300 rounded-md transition duration-200 focus:border-blue-500 focus:ring focus:ring-blue-200"
-                  placeholder="you@example.com"
-                />
+                <Label htmlFor="email">Email address</Label>
+                <Input id="email" name="email" type="email" required />
               </div>
 
               <div>
-                <Label htmlFor="password" className="text-gray-700">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="mt-1 w-full p-3 border border-gray-300 rounded-md transition duration-200 focus:border-blue-500 focus:ring focus:ring-blue-200"
-                  placeholder="Your password"
-                />
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" name="password" type="password" required />
               </div>
 
               <div className="flex items-center justify-between">
@@ -96,14 +93,10 @@ const SignIn = () => {
                   className="text-sm text-primary p-0"
                   onClick={() => navigate("/forgot-password")}
                 >
-                  Forgot your password?
+                  Forgot password?
                 </Button>
               </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 text-white rounded-md py-2 hover:bg-blue-700 transition duration-200"
-              >
+              <Button type="submit" className="w-full">
                 Sign In
               </Button>
             </form>

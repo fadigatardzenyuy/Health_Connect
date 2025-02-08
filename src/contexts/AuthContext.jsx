@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
+// Create a context for authentication
 const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }) {
@@ -8,35 +10,114 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Simulated authentication - replace with real auth logic
-  const login = async (email, password) => {
-    // Simulate API call
-    const mockUser = {
-      id: "1",
-      name: "Dr. Sarah Johnson",
-      email: email,
-      role: "doctor",
-      isVerified: true,
-      doctorCode: "123456",
+  useEffect(() => {
+    // Set up auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        const { data: userData, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user data:", error);
+          setUser(null);
+        } else {
+          setUser({
+            id: userData.id,
+            name: userData.full_name,
+            email: userData.email,
+            role: userData.role,
+            isVerified: userData.is_verified,
+            doctorCode: userData.doctor_code,
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
     };
-    setUser(mockUser);
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Error",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const verifyDoctorCode = async (code) => {
     try {
-      // Simulate API verification
       if (user?.role === "doctor") {
+        const { error } = await supabase
+          .from("doctor_verifications")
+          .update({
+            status: "verified",
+            verification_date: new Date().toISOString(),
+          })
+          .eq("doctor_id", user.id)
+          .eq("license_number", code);
+
+        if (error) throw error;
+
+        // Update user verification status
+        await supabase
+          .from("profiles")
+          .update({ is_verified: true })
+          .eq("id", user.id);
+
         setUser((prev) => (prev ? { ...prev, isVerified: true } : null));
+
         toast({
           title: "Verification Successful",
           description: "Your doctor account has been verified.",
         });
       }
     } catch (error) {
+      console.error("Verification error:", error);
       toast({
         title: "Verification Failed",
         description: "Please check your code and try again.",
@@ -48,13 +129,16 @@ export function AuthProvider({ children }) {
 
   const resetDoctorCode = async (email) => {
     try {
-      // Simulate API call for code reset
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+
       toast({
         title: "Reset Code Sent",
         description:
           "Check your email for instructions to reset your doctor code.",
       });
     } catch (error) {
+      console.error("Reset code error:", error);
       toast({
         title: "Reset Failed",
         description:
@@ -64,11 +148,6 @@ export function AuthProvider({ children }) {
       throw error;
     }
   };
-
-  useEffect(() => {
-    // Simulate loading user data
-    setIsLoading(false);
-  }, []);
 
   return (
     <AuthContext.Provider
