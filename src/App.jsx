@@ -22,6 +22,8 @@ import Settings from "./pages/Settings";
 import { AuthProvider } from "@/contexts/AuthContext"; // Import the AuthProvider
 import "./index.css"; // Ensure to include your CSS
 import { Analytics } from "@vercel/analytics/react";
+// import AiChatP from "./pages/AiChatPage";
+import AiChatPage from "./pages/AiChatPage";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -35,6 +37,11 @@ const routes = [
   {
     path: "/dashboard",
     element: <Index />,
+  },
+
+  {
+    path: "/aiDoc",
+    element: <AiChatPage />,
   },
   {
     path: "/onboarding",
