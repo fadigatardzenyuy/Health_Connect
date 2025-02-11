@@ -11,15 +11,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent multiple submissions
+    setIsLoading(true); // Set loading state
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email");
     const password = formData.get("password");
@@ -32,18 +36,19 @@ const SignIn = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
-
-      // Redirect based on user role
+      // Fetch user profile to determine role
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", data.user.id)
         .single();
 
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+
+      // Redirect based on user role
       navigate(profile?.role === "doctor" ? "/doctor-dashboard" : "/dashboard");
     } catch (error) {
       console.error("Login error:", error);
@@ -53,8 +58,11 @@ const SignIn = () => {
           error.message || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false); // Reset loading state
     }
   };
+
   const handleSocialSignIn = (provider) => {
     toast({
       title: "Coming Soon",
@@ -96,8 +104,9 @@ const SignIn = () => {
                   Forgot password?
                 </Button>
               </div>
-              <Button type="submit" className="w-full">
-                Sign In
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
@@ -110,7 +119,7 @@ const SignIn = () => {
             <div className="mt-2 flex flex-col gap-2">
               <Button
                 variant="outline"
-                className="flex items-center justify-center w-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition duration-200"
+                className="flex items-center justify-center w-full border border-blue-600 text-blue-600 hover:bg-blue-100 transition duration-200"
                 onClick={() => handleSocialSignIn("Google")}
               >
                 <Mail className="w-5 h-5 mr-2" />

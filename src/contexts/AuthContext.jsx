@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 
-// Create a context for authentication
 const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }) {
@@ -11,7 +10,6 @@ export function AuthProvider({ children }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -23,7 +21,6 @@ export function AuthProvider({ children }) {
           .single();
 
         if (error) {
-          console.error("Error fetching user data:", error);
           setUser(null);
         } else {
           setUser({
@@ -60,7 +57,6 @@ export function AuthProvider({ children }) {
         description: "You have successfully signed in.",
       });
     } catch (error) {
-      console.error("Login error:", error);
       toast({
         title: "Error",
         description: "Invalid email or password. Please try again.",
@@ -80,7 +76,6 @@ export function AuthProvider({ children }) {
         description: "You have been successfully signed out.",
       });
     } catch (error) {
-      console.error("Logout error:", error);
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",
@@ -103,11 +98,12 @@ export function AuthProvider({ children }) {
 
         if (error) throw error;
 
-        // Update user verification status
-        await supabase
+        const { error: profileError } = await supabase
           .from("profiles")
           .update({ is_verified: true })
           .eq("id", user.id);
+
+        if (profileError) throw profileError;
 
         setUser((prev) => (prev ? { ...prev, isVerified: true } : null));
 
@@ -117,7 +113,6 @@ export function AuthProvider({ children }) {
         });
       }
     } catch (error) {
-      console.error("Verification error:", error);
       toast({
         title: "Verification Failed",
         description: "Please check your code and try again.",
@@ -138,7 +133,6 @@ export function AuthProvider({ children }) {
           "Check your email for instructions to reset your doctor code.",
       });
     } catch (error) {
-      console.error("Reset code error:", error);
       toast({
         title: "Reset Failed",
         description:

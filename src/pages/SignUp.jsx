@@ -12,15 +12,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") || "patient";
+  const [isLoading, setIsLoading] = useState(false);
+  const [licenseError, setLicenseError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent double submission
+    setIsLoading(true);
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email");
     const password = formData.get("password");
@@ -28,6 +34,7 @@ const SignUp = () => {
     const license = formData.get("license");
 
     try {
+      // Attempt signup
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -42,6 +49,12 @@ const SignUp = () => {
 
       if (error) throw error;
 
+      // Check if the user is authenticated
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       toast({
         title: "Account created successfully",
         description:
@@ -50,7 +63,12 @@ const SignUp = () => {
             : "Welcome to Health Connect!",
       });
 
-      navigate(role === "doctor" ? "/doctor-dashboard" : "/dashboard");
+      // Navigate based on role
+      if (role === "doctor") {
+        navigate("/doctor-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error("Signup error:", error);
       toast({
@@ -60,6 +78,8 @@ const SignUp = () => {
           "An error occurred during sign up. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,6 +92,23 @@ const SignUp = () => {
     setTimeout(() => {
       navigate("/dashboard"); // Redirect to the dashboard
     }, 1000);
+  };
+
+  const validateLicenseFormat = (license) => {
+    const licenseFormat = /^[A-Z]{2}\d{6}$/;
+    return licenseFormat.test(license);
+  };
+
+  const handleLicenseChange = (e) => {
+    const value = e.target.value.toUpperCase();
+    e.target.value = value;
+    if (value && !validateLicenseFormat(value)) {
+      setLicenseError(
+        "License must be 2 uppercase letters followed by 6 digits (e.g., AB123456)"
+      );
+    } else {
+      setLicenseError("");
+    }
   };
 
   return (
@@ -172,15 +209,30 @@ const SignUp = () => {
               {role === "doctor" && (
                 <div>
                   <Label htmlFor="license">Medical License Number</Label>
-                  <Input id="license" name="license" type="text" required />
+                  <Input
+                    id="license"
+                    name="license"
+                    type="text"
+                    required
+                    onChange={handleLicenseChange}
+                    className={`mt-1 ${
+                      licenseError ? "border-destructive" : ""
+                    }`}
+                  />
+                  {licenseError && (
+                    <p className="text-sm text-destructive mt-1">
+                      {licenseError}
+                    </p>
+                  )}
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full bg-blue-600 text-white rounded-md py-2 hover:bg-blue-700 transition duration-200"
+                className="w-full bg-primary hover:bg-primary/90"
+                disabled={isLoading}
               >
-                Sign Up
+                {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
             </form>
 
@@ -199,27 +251,27 @@ const SignUp = () => {
               <div className="mt-2 flex flex-col gap-2">
                 <Button
                   variant="outline"
-                  className="flex items-center w-full"
+                  className="flex items-center justify-center w-full border border-blue-600 text-blue-600 hover:bg-blue-100 transition duration-200"
                   onClick={() => handleSocialSignIn("Google")}
                 >
                   <Mail className="w-5 h-5 mr-2" />
-                  Sign up with Google
+                  Sign in with Google
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex items-center w-full"
+                  className="flex items-center justify-center w-full border border-blue-600 text-blue-600 hover:bg-blue-100 transition duration-200"
                   onClick={() => handleSocialSignIn("Facebook")}
                 >
                   <Facebook className="w-5 h-5 mr-2" />
-                  Sign up with Facebook
+                  Sign in with Facebook
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex items-center w-full"
-                  onClick={() => handleSocialSignIn("X")}
+                  className="flex items-center justify-center w-full border border-blue-600 text-blue-600 hover:bg-blue-100 transition duration-200"
+                  onClick={() => handleSocialSignIn("Twitter")}
                 >
                   <Twitter className="w-5 h-5 mr-2" />
-                  Sign up with X
+                  Sign in with Twitter
                 </Button>
               </div>
             </div>

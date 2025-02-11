@@ -19,10 +19,9 @@ import SignUp from "./pages/SignUp";
 import EPrescriptions from "./pages/EPrescriptions";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
-import { AuthProvider } from "@/contexts/AuthContext"; // Import the AuthProvider
-import "./index.css"; // Ensure to include your CSS
+import { AuthProvider } from "./contexts/AuthContext";
+import "./index.css";
 import { Analytics } from "@vercel/analytics/react";
-// import AiChatP from "./pages/AiChatPage";
 import AiChatPage from "./pages/AiChatPage";
 
 // Create the query client for react-query
@@ -95,8 +94,6 @@ const router = createBrowserRouter(routes);
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      {" "}
-      {/* Wrap your application with AuthProvider */}
       <TooltipProvider>
         <Toaster />
         <Sonner />

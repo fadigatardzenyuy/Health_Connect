@@ -1,24 +1,67 @@
-import { Image, Video, Send, MessageSquare, Star, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { DoctorSearch } from "./DoctorSearch";
 import { SymptomChecker } from "./AIFeatures/SymptomChecker";
 import { HealthAssistant } from "./AIFeatures/HealthAssistant";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { PostForm } from "./posts/PostForm";
+import { PostList } from "./posts/PostList";
+import { MessageSquare, Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function MainFeed() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user, isDoctor } = useAuth();
+  const [posts, setPosts] = useState([]);
+  const [isPostsLoading, setIsPostsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel("public:posts")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "posts",
+        },
+        () => {
+          fetchPosts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .select(
+          `
+          *,
+          author:profiles(full_name, avatar_url, role, is_verified)
+        `
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setPosts(data || []);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setIsPostsLoading(false);
+    }
+  };
 
   return (
     <div className="col-span-12 md:col-span-6 space-y-4">
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <Tabs defaultValue="search" className="w-full">
+        <Tabs defaultValue="post" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 p-0">
             <TabsTrigger value="search">Find Doctor</TabsTrigger>
             <TabsTrigger value="post">Create Post</TabsTrigger>
@@ -35,42 +78,8 @@ export function MainFeed() {
           </TabsContent>
 
           <TabsContent value="post" className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              {user?.role === "doctor" && user?.isVerified && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Verified Doctor
-                </span>
-              )}
-            </div>
-            <Textarea
-              placeholder="Share your health journey or ask a question..."
-              className="w-full mb-4 resize-none"
-            />
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Image className="w-4 h-4 mr-2" />
-                  <span className="hidden md:inline">Image</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Video className="w-4 h-4 mr-2" />
-                  <span className="hidden md:inline">Video</span>
-                </Button>
-              </div>
-              <Button className="flex items-center">
-                <Send className="w-4 h-4 mr-2" />
-                <span>Post</span>
-              </Button>
-            </div>
+            <PostForm />
+            <PostList posts={posts} isLoading={isPostsLoading} />
           </TabsContent>
 
           <TabsContent value="ai" className="p-4 space-y-6">
