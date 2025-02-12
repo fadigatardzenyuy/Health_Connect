@@ -1,21 +1,24 @@
-import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DoctorSearch } from "./DoctorSearch";
 import { SymptomChecker } from "./AIFeatures/SymptomChecker";
 import { HealthAssistant } from "./AIFeatures/HealthAssistant";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { PostForm } from "./posts/PostForm";
 import { PostList } from "./posts/PostList";
 import { MessageSquare, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 
 export function MainFeed() {
   const [posts, setPosts] = useState([]);
   const [isPostsLoading, setIsPostsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchPosts();
-    // Subscribe to realtime updates
+
+    // Subscribe to realtime updates for posts
     const channel = supabase
       .channel("public:posts")
       .on(
@@ -25,11 +28,14 @@ export function MainFeed() {
           schema: "public",
           table: "posts",
         },
-        () => {
-          fetchPosts();
+        (payload) => {
+          console.log("Change received!", payload);
+          fetchPosts(); // Refresh posts when any change occurs
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -38,21 +44,58 @@ export function MainFeed() {
 
   const fetchPosts = async () => {
     try {
+      console.log("Fetching posts...");
       const { data, error } = await supabase
         .from("posts")
         .select(
           `
-          *,
-          author:profiles(full_name, avatar_url, role, is_verified)
+          id,
+          content,
+          image_url,
+          created_at,
+          author:profiles(
+            full_name,
+            avatar_url,
+            role,
+            is_verified
+          )
         `
         )
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching posts:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load posts. Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      setPosts(data || []);
+      // Transform the data to match our Post interface
+      const transformedPosts = data.map((post) => ({
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url || undefined,
+        created_at: post.created_at,
+        author: {
+          full_name: post.author?.full_name || "Unknown User",
+          avatar_url: post.author?.avatar_url || "",
+          role: post.author?.role || "user",
+          is_verified: post.author?.is_verified || false,
+        },
+      }));
+
+      console.log("Posts fetched and transformed:", transformedPosts);
+      setPosts(transformedPosts);
     } catch (error) {
       console.error("Error fetching posts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load posts. Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setIsPostsLoading(false);
     }
