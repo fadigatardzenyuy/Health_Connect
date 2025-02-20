@@ -45,7 +45,7 @@ export function HealthAssistant() {
         const transcript = Array.from(event.results)
           .map((result) => result[0])
           .map((result) => result.transcript)
-          .join("");
+          .join(" ");
         setMessage((prev) => prev + " " + transcript);
       };
 
@@ -65,7 +65,7 @@ export function HealthAssistant() {
 
       recognition.start();
     } catch (error) {
-      console.error("Speech recognition error:", error);
+      console.error("Voice input error:", error);
       toast({
         title: "Error",
         description: "Voice input is not supported in your browser.",
@@ -96,10 +96,11 @@ export function HealthAssistant() {
       } else if (userMessage.toLowerCase().includes("treatment")) {
         response = await getTreatmentRecommendations(userMessage);
       } else {
-        response =
-          "I understand your concern. Please provide more specific information about your symptoms or ask about a specific condition for diagnosis or treatment recommendations.";
+        // General AI response if no specific condition is mentioned
+        response = await getTreatmentRecommendations(userMessage);
       }
 
+      // Add AI response to messages
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: response },
@@ -115,7 +116,6 @@ export function HealthAssistant() {
       setIsProcessing(false);
     }
   };
-
   return (
     <Card>
       <CardContent className="p-4 space-y-4">

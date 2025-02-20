@@ -29,6 +29,7 @@ const SYSTEM_PROMPTS = {
   4. When to Seek Help
   5. Disclaimer`
 };
+console.log(import.meta.env.VITE_OPENAI_API_KEY);
 
 export async function analyzeSymptoms(symptoms) {
   try {
@@ -36,25 +37,34 @@ export async function analyzeSymptoms(symptoms) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4o-mini", // Use "gpt-4" or "gpt-4-turbo" depending on your access
         messages: [
           {
             role: "system",
-            content: SYSTEM_PROMPTS.SYMPTOM_CHECKER,
+            content: SYSTEM_PROMPTS.SYMPTOM_CHECKER, // Ensure SYSTEM_PROMPTS is defined
           },
           {
             role: "user",
             content: symptoms,
           },
         ],
-        temperature: 0.3,
+        temperature: 0.3, // Adjust temperature for more deterministic responses
       }),
     });
 
+    // Check if the response is OK (status code 200-299)
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        `API request failed with status ${response.status}: ${errorData.error?.message || "Unknown error"}`
+      );
+    }
+
     const data = await response.json();
+    // Return the assistant's response
     return data.choices[0].message.content;
   } catch (error) {
     console.error("Error analyzing symptoms:", error);
@@ -68,7 +78,7 @@ export async function getDiagnosis(symptoms, medicalHistory = "") {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: "gpt-4o",
@@ -100,10 +110,10 @@ export async function getTreatmentRecommendations(condition) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4o-mini", // Adjusted model name to a correct one
         messages: [
           {
             role: "system",
@@ -118,8 +128,20 @@ export async function getTreatmentRecommendations(condition) {
       }),
     });
 
+    // Check if the response is OK (status code 200-299)
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error: ${errorData.error.message || "Something went wrong"}`);
+    }
+
     const data = await response.json();
-    return data.choices[0].message.content;
+
+    // Check if choices are available
+    if (data.choices && data.choices.length > 0) {
+      return data.choices[0].message.content;
+    } else {
+      throw new Error("No treatment recommendations found.");
+    }
   } catch (error) {
     console.error("Error getting treatment recommendations:", error);
     throw new Error("Failed to get treatment recommendations. Please try again later.");
