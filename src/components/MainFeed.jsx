@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DoctorSearch } from "./DoctorSearch";
-import { SymptomChecker } from "./AIFeatures/SymptomChecker";
+
 import { HealthAssistant } from "./AIFeatures/HealthAssistant";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -9,6 +9,7 @@ import { PostList } from "./posts/PostList";
 import { MessageSquare, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { SymptomChecker } from "./AIFeatures/symptomChecker";
 
 export function MainFeed() {
   const [posts, setPosts] = useState([]);

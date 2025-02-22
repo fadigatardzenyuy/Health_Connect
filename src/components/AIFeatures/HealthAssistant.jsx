@@ -96,8 +96,7 @@ export function HealthAssistant() {
       } else if (userMessage.toLowerCase().includes("treatment")) {
         response = await getTreatmentRecommendations(userMessage);
       } else {
-        response =
-          "I understand your concern. Please provide more specific information about your symptoms or ask about a specific condition for diagnosis or treatment recommendations.";
+        response = await getTreatmentRecommendations(userMessage);
       }
 
       setMessages((prev) => [
