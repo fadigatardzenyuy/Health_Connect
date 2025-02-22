@@ -67,8 +67,8 @@ export default async (req, res) => {
         const { symptoms } = req.body;
 
         // Use environment variables for sensitive data
-        const OPENAI_API_KEY = "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"; // Ensure this is set in your environment
-
+        const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Ensure this is set in your environment
+        console.log("OPENAI_API_KEY:", OPENAI_API_KEY);
         if (!OPENAI_API_KEY) {
             return res.status(500).json({
                 error: "Internal Server Error",
