@@ -1,11 +1,12 @@
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Brain, Loader2, Mic } from "lucide-react";
-import { analyzeSymptoms } from "@/utils/aiService";
+// import { analyzeSymptoms } from "@/utils/aiService"; // Ensure this path is correct
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { analyzeSymptoms } from "../../utils/aiService";
 
 export function SymptomChecker() {
   const [symptoms, setSymptoms] = useState("");
@@ -14,10 +15,12 @@ export function SymptomChecker() {
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
 
+  // Handle text input change
   const handleSymptomChange = (e) => {
     setSymptoms(e.target.value);
   };
 
+  // Start voice input using Web Speech API
   const startVoiceInput = async () => {
     try {
       const recognition = new (window.webkitSpeechRecognition ||
@@ -62,6 +65,7 @@ export function SymptomChecker() {
     }
   };
 
+  // Analyze symptoms using the AI service
   const analyzeUserSymptoms = async () => {
     if (!symptoms.trim()) {
       toast({
@@ -77,6 +81,7 @@ export function SymptomChecker() {
       const result = await analyzeSymptoms(symptoms);
       setAnalysis(result);
     } catch (error) {
+      console.error("Error analyzing symptoms:", error);
       toast({
         title: "Error",
         description:
@@ -91,11 +96,13 @@ export function SymptomChecker() {
   return (
     <Card>
       <CardContent className="p-4 space-y-4">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Brain className="w-6 h-6 text-primary" />
             <h3 className="text-lg font-semibold">AI Symptom Checker</h3>
           </div>
+          {/* Voice Input Button */}
           <Button
             variant="outline"
             size="icon"
@@ -106,6 +113,7 @@ export function SymptomChecker() {
           </Button>
         </div>
 
+        {/* Symptoms Input */}
         <Textarea
           placeholder="Describe your symptoms in detail..."
           value={symptoms}
@@ -113,6 +121,7 @@ export function SymptomChecker() {
           className="min-h-[100px]"
         />
 
+        {/* Analyze Button */}
         <Button
           onClick={analyzeUserSymptoms}
           disabled={isAnalyzing}
@@ -128,6 +137,7 @@ export function SymptomChecker() {
           )}
         </Button>
 
+        {/* Analysis Result */}
         {analysis && (
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
             <div className="whitespace-pre-wrap">{analysis}</div>
