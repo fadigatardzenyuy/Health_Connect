@@ -1,3 +1,4 @@
+// api/analyzeSymptoms.js
 const SYSTEM_PROMPTS = {
     SYMPTOM_CHECKER: `You are an AI medical assistant. Your role is to analyze symptoms and provide medical-related advice. 
     If the input is not related to medicine or health, respond with: "This query does not match my functions. I am designed to assist with medical and health-related questions only."
@@ -26,8 +27,6 @@ const SYSTEM_PROMPTS = {
     5. Disclaimer: Always follow your healthcare provider's specific instructions.`
 };
 
-
-
 export default async (req, res) => {
     console.log("Incoming request method:", req.method);
 
@@ -53,73 +52,77 @@ export default async (req, res) => {
         });
     }
 
-    const SYSTEM_PROMPT = SYSTEM_PROMPTS.SYMPTOM_CHECKER;
-
     try {
         // Validate request body
-        if (!req.body || !req.body.symptoms) {
+        if (!req.body || typeof req.body.symptoms !== "string") {
             return res.status(400).json({
                 error: "Bad Request",
-                message: "Symptoms are required",
+                message: "Symptoms must be a string",
             });
         }
 
-        const { symptoms } = req.body;
+        const { symptoms, promptType = "SYMPTOM_CHECKER" } = req.body;
+        const SYSTEM_PROMPT = SYSTEM_PROMPTS[promptType] || SYSTEM_PROMPTS.SYMPTOM_CHECKER;
 
         // Use environment variables for sensitive data
-        const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Ensure this is set in your environment
-        console.log("OPENAI_API_KEY:", OPENAI_API_KEY);
-        if (!OPENAI_API_KEY) {
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        if (!GEMINI_API_KEY) {
             return res.status(500).json({
                 error: "Internal Server Error",
-                message: "OpenAI API key is not configured.",
+                message: "Gemini API key is not configured.",
             });
         }
 
-        const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        // Gemini API endpoint
+        const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini", // Ensure using a valid model
-                messages: [
-                    {
-                        role: "system",
-                        content: SYSTEM_PROMPT,
-                    },
+                contents: [
                     {
                         role: "user",
-                        content: symptoms,
-                    },
+                        parts: [
+                            { text: SYSTEM_PROMPT },
+                            { text: symptoms }
+                        ]
+                    }
                 ],
-                temperature: 0.3,
+                generationConfig: {
+                    temperature: 0.3,
+                }
             }),
         });
 
-        // Check if OpenAI response is ok
-        if (!openaiResponse.ok) {
-            const errorData = await openaiResponse.json().catch(() => ({
-                error: "OpenAI API error",
-                message: openaiResponse.statusText,
+        // Check if Gemini response is ok
+        if (!geminiResponse.ok) {
+            const errorData = await geminiResponse.json().catch(() => ({
+                error: "Gemini API error",
+                message: geminiResponse.statusText,
             }));
-
-            return res.status(openaiResponse.status).json(errorData);
+            console.error("Gemini API error:", errorData);
+            return res.status(geminiResponse.status).json(errorData);
         }
 
-        const data = await openaiResponse.json();
+        const data = await geminiResponse.json();
+
+        // Extract response content from Gemini format
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated";
 
         // Send successful response
         return res.status(200).json({
             success: true,
-            analysis: data.choices[0].message.content,
+            model: "gemini-1.5-pro",
+            timestamp: new Date().toISOString(),
+            analysis: responseText,
         });
     } catch (error) {
         console.error("Server error:", error);
         return res.status(500).json({
             error: "Internal Server Error",
             message: "Failed to process the request",
+            details: error.message,
         });
     }
 };
