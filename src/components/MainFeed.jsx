@@ -9,7 +9,7 @@ import { PostList } from "./posts/PostList";
 import { MessageSquare, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { SymptomChecker } from "./AIFeatures/symptomChecker";
+import { SymptomChecker } from "./AIFeatures/SymptomChecker";
 
 export function MainFeed() {
   const [posts, setPosts] = useState([]);
