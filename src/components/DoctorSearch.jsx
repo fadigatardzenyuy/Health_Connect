@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -13,11 +13,12 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 
-export function DoctorSearch() {
+export function DoctorSearch({ onDoctorSelect }) {
   const [doctors, setDoctors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState();
   const [filters, setFilters] = useState({
     verifiedOnly: false,
     minRating: false,
@@ -59,9 +60,7 @@ export function DoctorSearch() {
 
       const { data, error } = await query.limit(10);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setDoctors(data || []);
     } catch (error) {
@@ -93,6 +92,11 @@ export function DoctorSearch() {
       ...prev,
       [key]: !prev[key],
     }));
+  };
+
+  const handleDoctorSelection = (doctorId) => {
+    setSelectedDoctorId(doctorId);
+    onDoctorSelect(doctorId);
   };
 
   return (
@@ -170,7 +174,12 @@ export function DoctorSearch() {
             </div>
           ) : (
             doctors.map((doctor) => (
-              <Card key={doctor.id} className="overflow-hidden">
+              <Card
+                key={doctor.id}
+                className={`overflow-hidden transition-colors ${
+                  selectedDoctorId === doctor.id ? "ring-2 ring-primary" : ""
+                }`}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <img
@@ -208,7 +217,19 @@ export function DoctorSearch() {
                         </div>
                       </div>
                       <div className="mt-4 flex gap-2">
-                        <Button size="sm">Book Appointment</Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleDoctorSelection(doctor.id)}
+                          variant={
+                            selectedDoctorId === doctor.id
+                              ? "default"
+                              : "outline"
+                          }
+                        >
+                          {selectedDoctorId === doctor.id
+                            ? "Selected"
+                            : "Select Doctor"}
+                        </Button>
                         <Button size="sm" variant="outline">
                           View Profile
                         </Button>
