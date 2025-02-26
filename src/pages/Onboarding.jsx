@@ -168,7 +168,7 @@ const Onboarding = () => {
                   },
                 }}
               >
-                Cameroon Health
+                WAHPITA
                 <motion.span
                   className="block bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent"
                   variants={{

@@ -244,7 +244,7 @@ const SignUp = () => {
           >
             Welcome to{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              Health Connect
+              WAHPITA
             </span>
           </motion.h3>
 

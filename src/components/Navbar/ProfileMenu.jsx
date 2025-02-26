@@ -159,7 +159,11 @@ export function ProfileMenu({ userData }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="text-red-600"
+          asChild
+        >
           <Link to="/signin">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
