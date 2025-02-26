@@ -22,7 +22,7 @@ const Onboarding = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section with Background */}
-      <div className="relative min-h-[100vh] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
+      <div className="relative min-h-[100vh] sm:min-h-[100vh] flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
           <img
@@ -118,11 +118,11 @@ const Onboarding = () => {
               </div>
             </div>
 
-            {/* AI Features Section */}
+            {/* AI Features Section
             <div className="grid gap-6 sm:gap-8 md:grid-cols-2 mx-auto mb-16 mt-8">
               <RiskAssessment />
               <OutbreakDetection />
-            </div>
+            </div> */}
 
             <div className="text-center">
               <p className="text-white-600 mb-4">Already have an account?</p>

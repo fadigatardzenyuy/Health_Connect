@@ -18,7 +18,7 @@ export function Navbar({ userData }) {
       <div className="flex items-center gap-4">
         <Link to="/" className="flex items-center">
           <h1 className="text-xl md:text-2xl font-bold text-primary">
-            Cameroon Health Connect
+            WAHPITA
           </h1>
         </Link>
         <DashboardSwitcher />

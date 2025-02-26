@@ -1,6 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DoctorSearch } from "./DoctorSearch";
-
 import { HealthAssistant } from "./AIFeatures/HealthAssistant";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";

@@ -1,91 +1,112 @@
-import { useEffect, useState } from "react";
 import { Search, MapPin, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/lib/supabase.js";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
 
 export function DoctorSearch() {
-  const [doctors, setDoctors] = useState([]); // State to store all doctors
-  const [filteredDoctors, setFilteredDoctors] = useState([]); // State to store filtered doctors
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
-  const [locationQuery, setLocationQuery] = useState(""); // State for location query
+  const [doctors, setDoctors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [filters, setFilters] = useState({
+    verifiedOnly: false,
+    minRating: false,
+    hasReviews: false,
+  });
+  const { toast } = useToast();
 
-  // Fetch the first 10 doctors from Supabase on component mount
-  useEffect(() => {
-    fetchDoctors();
-  }, []);
-
-  // Fetch doctors from Supabase
   const fetchDoctors = async () => {
     try {
-      const { data, error } = await supabase
-        .from("doctors")
+      setIsLoading(true);
+      let query = supabase
+        .from("profiles")
         .select("*")
-        .limit(10); // Fetch only the first 10 doctors
+        .eq("role", "doctor")
+        .order("rating", { ascending: false })
+        .order("total_reviews", { ascending: false });
 
-      if (error) throw error;
+      if (searchQuery) {
+        query = query.or(
+          `full_name.ilike.%${searchQuery}%,specialization.ilike.%${searchQuery}%`
+        );
+      }
 
-      setDoctors(data);
-      setFilteredDoctors(data); // Initialize filtered doctors with the fetched data
+      if (filters.verifiedOnly) {
+        query = query.eq("is_verified", true);
+      }
+
+      if (filters.minRating) {
+        query = query.gte("rating", 4.0);
+      }
+
+      if (filters.hasReviews) {
+        query = query.gt("total_reviews", 0);
+      }
+
+      if (locationQuery) {
+        query = query.ilike("location", `%${locationQuery}%`);
+      }
+
+      const { data, error } = await query.limit(10);
+
+      if (error) {
+        throw error;
+      }
+
+      setDoctors(data || []);
     } catch (error) {
-      console.error("Error fetching doctors:", error.message);
+      console.error("Error fetching doctors:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load doctors. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle search input changes
-  const handleSearch = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
+  useEffect(() => {
+    fetchDoctors();
+  }, [searchQuery, locationQuery, filters]);
 
-    // Filter doctors based on the search query
-    const filtered = doctors.filter(
-      (doctor) =>
-        doctor.name.toLowerCase().includes(query) ||
-        doctor.specialty.toLowerCase().includes(query) ||
-        doctor.location.toLowerCase().includes(query)
-    );
-
-    setFilteredDoctors(filtered);
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
   };
 
-  // Handle location input changes
-  const handleLocationChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setLocationQuery(query);
-
-    // Filter doctors based on the location query
-    const filtered = doctors.filter((doctor) =>
-      doctor.location.toLowerCase().includes(query)
-    );
-
-    setFilteredDoctors(filtered);
+  const handleLocationChange = (event) => {
+    setLocationQuery(event.target.value);
   };
 
-  // Handle reset filters
-  const handleResetFilters = () => {
-    setSearchQuery("");
-    setLocationQuery("");
-    setFilteredDoctors(doctors); // Reset to the original list of doctors
+  const toggleFilter = (key) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   };
 
   return (
     <div className="space-y-6">
-      {/* Search and Filter Section */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        {/* Search by Name or Specialty */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search doctors by name or specialty"
             className="pl-9"
             value={searchQuery}
-            onChange={handleSearch}
+            onChange={handleSearchChange}
           />
         </div>
-
-        {/* Search by Location */}
         <div className="relative flex-1">
           <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -95,93 +116,111 @@ export function DoctorSearch() {
             onChange={handleLocationChange}
           />
         </div>
-
-        {/* Reset Filters Button */}
-        <Button
-          variant="outline"
-          className="w-full md:w-auto"
-          onClick={handleResetFilters}
-        >
-          <Filter className="mr-2 h-4 w-4" />
-          Reset Filters
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full md:w-auto">
+              <Filter className="mr-2 h-4 w-4" />
+              Filters
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            <DropdownMenuCheckboxItem
+              checked={filters.verifiedOnly}
+              onCheckedChange={() => toggleFilter("verifiedOnly")}
+            >
+              Verified Doctors Only
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={filters.minRating}
+              onCheckedChange={() => toggleFilter("minRating")}
+            >
+              4+ Star Rating
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={filters.hasReviews}
+              onCheckedChange={() => toggleFilter("hasReviews")}
+            >
+              Has Reviews
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Doctors List */}
-      <div className="grid gap-4">
-        {filteredDoctors.length > 0 ? (
-          filteredDoctors.map((doctor) => (
-            <Card key={doctor.id} className="overflow-hidden">
+      {isLoading ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, index) => (
+            <Card key={index} className="animate-pulse">
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
-                  {/* Doctor Image */}
-                  <img
-                    src={doctor.image}
-                    alt={doctor.name}
-                    className="h-16 w-16 rounded-full object-cover"
-                  />
-
-                  {/* Doctor Details */}
-                  <div className="flex-1">
-                    {/* Name and Specialty */}
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-medium">{doctor.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {doctor.specialty}
-                        </p>
-                      </div>
-                      {/* Availability Badge */}
-                      <Badge variant="outline" className="bg-accent">
-                        {doctor.availability}
-                      </Badge>
-                    </div>
-
-                    {/* Location and Rating */}
-                    <div className="mt-2 flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{doctor.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-medium">
-                          {doctor.rating}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          ({doctor.reviews} reviews)
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Languages */}
-                    <div className="mt-2">
-                      {doctor.languages.map((language) => (
-                        <Badge
-                          key={language}
-                          variant="secondary"
-                          className="mr-1"
-                        >
-                          {language}
-                        </Badge>
-                      ))}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="mt-4 flex gap-2">
-                      <Button size="sm">Book Appointment</Button>
-                      <Button size="sm" variant="outline">
-                        View Profile
-                      </Button>
-                    </div>
+                  <div className="h-16 w-16 rounded-full bg-gray-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-1/4 rounded bg-gray-200" />
+                    <div className="h-3 w-1/3 rounded bg-gray-200" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))
-        ) : (
-          <p className="text-center text-muted-foreground">No doctors found.</p>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {doctors.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No doctors found matching your criteria
+            </div>
+          ) : (
+            doctors.map((doctor) => (
+              <Card key={doctor.id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <img
+                      src={
+                        doctor.avatar_url ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          doctor.full_name
+                        )}&background=random`
+                      }
+                      alt={doctor.full_name}
+                      className="h-16 w-16 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-medium">{doctor.full_name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {doctor.specialization || "General Practitioner"}
+                          </p>
+                        </div>
+                        {doctor.is_verified && (
+                          <Badge variant="outline" className="bg-accent">
+                            Verified Doctor
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="mt-2 flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-medium">
+                            {doctor.rating.toFixed(1)}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            ({doctor.total_reviews} reviews)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex gap-2">
+                        <Button size="sm">Book Appointment</Button>
+                        <Button size="sm" variant="outline">
+                          View Profile
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
