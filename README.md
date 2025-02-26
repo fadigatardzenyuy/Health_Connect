@@ -113,7 +113,7 @@ To set up the project locally, follow these instructions:
 
 ```sh
 # Step 1: Clone the repository
-git clone <YOUR_GIT_URL>
+git clone <https://github.com/fadigatardzenyuy/Health_Connect/tree/master>
 
 # Step 2: Navigate to the project directory
 cd health-bride
