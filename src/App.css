@@ -1,42 +1,44 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@layer base {
+  #root {
+    @apply max-w-[1280px] mx-auto p-8 text-center;
   }
-  to {
-    transform: rotate(360deg);
+
+  .logo {
+    @apply h-[6em] p-6 transition-all duration-300 will-change-[filter];
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  
+  .logo:hover {
+    @apply drop-shadow-[0_0_2em_rgba(100,108,255,0.67)];
   }
-}
 
-.card {
-  padding: 2em;
-}
+  .logo.react:hover {
+    @apply drop-shadow-[0_0_2em_rgba(97,218,251,0.67)];
+  }
 
-.read-the-docs {
-  color: #888;
+  @keyframes logo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a:nth-of-type(2) .logo {
+      animation: logo-spin infinite 20s linear;
+    }
+  }
+
+  .card {
+    @apply p-8;
+  }
+
+  .read-the-docs {
+    @apply text-gray-500; /* or use a Tailwind color class like text-muted */
+  }
 }
