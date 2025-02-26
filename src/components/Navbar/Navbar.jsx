@@ -16,7 +16,7 @@ export function Navbar({ userData }) {
   return (
     <div className="flex justify-between items-center h-16">
       <div className="flex items-center gap-4">
-        <Link to="/" className="flex items-center">
+        <Link to="/dashboard" className="flex items-center">
           <h1 className="text-xl md:text-2xl font-bold text-primary">
             WAHPITA
           </h1>
