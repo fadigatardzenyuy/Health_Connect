@@ -1,0 +1,8 @@
+
+{
+    "project_id": "fmrsfkeypeoxahqdqsed",
+    "api": {
+      "enabled": true,
+      "authorization": "service_role"
+    }
+  }
