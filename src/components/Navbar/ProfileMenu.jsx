@@ -2,7 +2,7 @@ import { Settings, LogOut, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -90,6 +90,9 @@ export function ProfileMenu({ userData }) {
           className="relative h-8 w-8 rounded-full"
         >
           <Avatar>
+            {userData.avatarUrl ? (
+              <AvatarImage src={userData.avatarUrl} alt={userData.name} />
+            ) : null}
             <AvatarFallback>{userData.initials}</AvatarFallback>
           </Avatar>
         </Button>
@@ -153,6 +156,12 @@ export function ProfileMenu({ userData }) {
           </DialogContent>
         </Dialog>
         <DropdownMenuItem asChild>
+          <Link to="/profile">
+            <User className="mr-2 h-4 w-4" />
+            <span>View Profile</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link to="/settings">
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
@@ -160,14 +169,10 @@ export function ProfileMenu({ userData }) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-          <Link to="/signin">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </Link>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
-
-import React from "react";

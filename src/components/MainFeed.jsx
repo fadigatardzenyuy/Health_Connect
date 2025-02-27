@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DoctorSearch } from "./DoctorSearch";
+import { SymptomChecker } from "./AIFeatures/SymptomChecker";
 import { HealthAssistant } from "./AIFeatures/HealthAssistant";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -8,7 +9,6 @@ import { PostList } from "./posts/PostList";
 import { MessageSquare, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { SymptomChecker } from "./AIFeatures/SymptomChecker";
 
 export function MainFeed() {
   const [posts, setPosts] = useState([]);
@@ -53,6 +53,10 @@ export function MainFeed() {
           content,
           image_url,
           created_at,
+          likes_count,
+          comments_count,
+          shares_count,
+          views_count,
           author:profiles(
             full_name,
             avatar_url,
@@ -73,12 +77,16 @@ export function MainFeed() {
         return;
       }
 
-      // Transform the data to match our Post interface
+      // Transform the data to match our Post format
       const transformedPosts = data.map((post) => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url || undefined,
         created_at: post.created_at,
+        likes_count: post.likes_count || 0,
+        comments_count: post.comments_count || 0,
+        shares_count: post.shares_count || 0,
+        views_count: post.views_count || 0,
         author: {
           full_name: post.author?.full_name || "Unknown User",
           avatar_url: post.author?.avatar_url || "",
