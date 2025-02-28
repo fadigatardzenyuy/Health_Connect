@@ -120,8 +120,8 @@ export function MainFeed() {
     <div className="col-span-12 md:col-span-6 space-y-4">
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <Tabs defaultValue="post" className="w-full">
-          {/* Custom tabs layout with better mobile spacing */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-1 p-1 bg-gray-100">
+          {/* Use TabsList component to properly wrap the TabsTriggers */}
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-1 p-1 bg-gray-100 w-full">
             <TabsTrigger
               value="search"
               className="p-2 rounded flex items-center justify-center gap-2 font-medium"
@@ -150,7 +150,7 @@ export function MainFeed() {
               <Users className="w-4 h-4" />
               <span>Community</span>
             </TabsTrigger>
-          </div>
+          </TabsList>
 
           <TabsContent value="search" className="p-4">
             <DoctorSearch />
