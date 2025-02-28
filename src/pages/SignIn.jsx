@@ -447,7 +447,7 @@ const SignIn = () => {
                 <Button
                   variant="outline"
                   className="w-full border-emerald-500 text-emerald-600 hover:bg-emerald-50 transition duration-200"
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate("/")}
                 >
                   Create an account
                 </Button>

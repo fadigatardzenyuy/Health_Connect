@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,23 +13,24 @@ export function PostCard({ post }) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [commentsCount, setCommentsCount] = useState(post.comments_count || 0);
-  const [sharesCount, setSharesCount] = useState(post.shares_count || 0);
+  const [sharesCount, setSharesCount] = useState(post.repost_count || 0);
   const [viewsCount, setViewsCount] = useState(post.views_count || 0);
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState("");
 
   // Increment view count when post is rendered
-  useState(() => {
+  useEffect(() => {
     incrementViewCount();
-  });
+  }, []);
 
   const incrementViewCount = async () => {
     try {
       // Only increment if user is logged in (to prevent spam)
       if (user) {
-        const { error } = await supabase.rpc("increment_post_views", {
-          post_id: post.id,
-        });
+        const { error } = await supabase
+          .from("posts")
+          .update({ views_count: (post.views_count || 0) + 1 })
+          .eq("id", post.id);
 
         if (!error) {
           setViewsCount((prev) => prev + 1);
@@ -135,9 +136,10 @@ export function PostCard({ post }) {
   const handleShare = async () => {
     try {
       // Increment share count
-      const { error } = await supabase.rpc("increment_post_shares", {
-        post_id: post.id,
-      });
+      const { error } = await supabase
+        .from("posts")
+        .update({ repost_count: (post.repost_count || 0) + 1 })
+        .eq("id", post.id);
 
       if (error) throw error;
 

@@ -55,7 +55,7 @@ export function MainFeed() {
           created_at,
           likes_count,
           comments_count,
-          shares_count,
+          repost_count, 
           views_count,
           author:profiles(
             full_name,
@@ -77,7 +77,7 @@ export function MainFeed() {
         return;
       }
 
-      // Transform the data to match our Post format
+      // Transform the data
       const transformedPosts = data.map((post) => ({
         id: post.id,
         content: post.content,
@@ -85,13 +85,13 @@ export function MainFeed() {
         created_at: post.created_at,
         likes_count: post.likes_count || 0,
         comments_count: post.comments_count || 0,
-        shares_count: post.shares_count || 0,
+        repost_count: post.repost_count || 0,
         views_count: post.views_count || 0,
         author: {
-          full_name: post.author?.full_name || "Unknown User",
-          avatar_url: post.author?.avatar_url || "",
-          role: post.author?.role || "user",
-          is_verified: post.author?.is_verified || false,
+          full_name: post.author?.[0]?.full_name || "Unknown User",
+          avatar_url: post.author?.[0]?.avatar_url || "",
+          role: post.author?.[0]?.role || "user",
+          is_verified: post.author?.[0]?.is_verified || false,
         },
       }));
 
