@@ -18,7 +18,6 @@ export function MainFeed() {
   useEffect(() => {
     fetchPosts();
 
-    // Subscribe to realtime updates for posts
     const channel = supabase
       .channel("public:posts")
       .on(
@@ -30,7 +29,7 @@ export function MainFeed() {
         },
         (payload) => {
           console.log("Change received!", payload);
-          fetchPosts(); // Refresh posts when any change occurs
+          fetchPosts();
         }
       )
       .subscribe((status) => {
@@ -77,7 +76,6 @@ export function MainFeed() {
         return;
       }
 
-      // Transform the data
       const transformedPosts = data.map((post) => ({
         id: post.id,
         content: post.content,

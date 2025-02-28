@@ -82,6 +82,8 @@ const SignUp = () => {
     const license = formData.get("license");
 
     try {
+      setIsLoading(true);
+
       // Attempt signup
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -97,11 +99,22 @@ const SignUp = () => {
 
       if (error) throw error;
 
-      // Check if the user is authenticated
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      // Instead of checking getUser, use the data from signUp
+      if (!data.user) throw new Error("User not authenticated");
+
+      // Create profile entry explicitly to ensure it exists
+      const { error: profileError } = await supabase.from("profiles").insert([
+        {
+          id: data.user.id,
+          email: email,
+          full_name: fullName,
+          role: role,
+          is_verified: false,
+          doctor_code: role === "doctor" ? license : null,
+        },
+      ]);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Account created successfully",
@@ -111,12 +124,16 @@ const SignUp = () => {
             : "Welcome to Health Connect!",
       });
 
-      // Navigate based on role
-      if (role === "doctor") {
-        navigate("/doctor-dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      // Add a small delay to ensure all operations complete
+      // This is especially important on mobile
+      setTimeout(() => {
+        // Navigate based on role
+        if (role === "doctor") {
+          window.location.href = "/doctor-dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      }, 500);
     } catch (error) {
       console.error("Signup error:", error);
       toast({

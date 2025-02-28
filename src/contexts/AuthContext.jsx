@@ -37,6 +37,39 @@ export function AuthProvider({ children }) {
               avatarUrl: userData.avatar_url,
               specialization: userData.specialization,
             });
+          } else {
+            // Handle case where profile doesn't exist yet but user is authenticated
+            const userMeta = session.user.user_metadata || {};
+
+            try {
+              // Create profile if it doesn't exist
+              const profileData = {
+                id: session.user.id,
+                email: session.user.email,
+                full_name: userMeta.full_name || "",
+                role: userMeta.role || "patient",
+                is_verified: false,
+                avatar_url: null,
+                doctor_code: userMeta.license_number || null,
+                specialization: userMeta.specialization || null,
+              };
+
+              await supabase.from("profiles").insert([profileData]);
+
+              // Set user with available data
+              setUser({
+                id: session.user.id,
+                name: userMeta.full_name || "",
+                email: session.user.email,
+                role: userMeta.role || "patient",
+                isVerified: false,
+                doctorCode: userMeta.license_number || null,
+                avatarUrl: null,
+                specialization: userMeta.specialization || null,
+              });
+            } catch (createError) {
+              console.error("Error creating profile:", createError);
+            }
           }
         }
       } catch (error) {
@@ -57,6 +90,8 @@ export function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change event:", event); // Better logging
+
       // Set loading to true only for sign-in/sign-up events
       if (event === "SIGNED_IN" || event === "SIGNED_UP") {
         setIsLoading(true);
@@ -72,7 +107,45 @@ export function AuthProvider({ children }) {
 
         if (error) {
           console.error("Error fetching user data:", error);
-          setUser(null);
+
+          // Special handling for new signups - the profile might not exist yet on mobile
+          // due to race conditions, so we'll create it from session metadata
+          if (event === "SIGNED_UP" || event === "SIGNED_IN") {
+            const userMeta = session.user.user_metadata || {};
+
+            try {
+              // Create profile if it doesn't exist
+              const profileData = {
+                id: session.user.id,
+                email: session.user.email,
+                full_name: userMeta.full_name || "",
+                role: userMeta.role || "patient",
+                is_verified: false,
+                avatar_url: null,
+                doctor_code: userMeta.license_number || null,
+                specialization: userMeta.specialization || null,
+              };
+
+              await supabase.from("profiles").insert([profileData]);
+
+              // Set user with available data
+              setUser({
+                id: session.user.id,
+                name: userMeta.full_name || "",
+                email: session.user.email,
+                role: userMeta.role || "patient",
+                isVerified: false,
+                doctorCode: userMeta.license_number || null,
+                avatarUrl: null,
+                specialization: userMeta.specialization || null,
+              });
+            } catch (createError) {
+              console.error("Error creating profile:", createError);
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
         } else {
           console.log("User data fetched:", userData);
           setUser({
@@ -104,17 +177,27 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
+      // Ensure proper navigation on mobile - force the redirect after login
+      const { data: userData } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
+
+      // Return role for navigation purposes
+      return userData?.role || "patient";
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -123,6 +206,105 @@ export function AuthProvider({ children }) {
         variant: "destructive",
       });
       setIsLoading(false); // Make sure to reset loading on error
+      throw error;
+    }
+  };
+
+  const signup = async (email, password, userData) => {
+    try {
+      setIsLoading(true);
+
+      // Attempt signup
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: userData.fullName,
+            role: userData.role,
+            ...(userData.role === "doctor" && {
+              license_number: userData.license,
+              specialization: userData.specialization,
+            }),
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      // Create profile entry explicitly
+      const profileData = {
+        id: data.user.id,
+        email: email,
+        full_name: userData.fullName,
+        role: userData.role,
+        is_verified: false,
+        avatar_url: null,
+        specialization: userData.specialization || null,
+        doctor_code: userData.role === "doctor" ? userData.license : null,
+      };
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert([profileData]);
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        // Continue even if profile creation fails, we'll handle it in auth state change
+      }
+
+      // If doctor, create verification record
+      if (userData.role === "doctor" && userData.license) {
+        const { error: verificationError } = await supabase
+          .from("doctor_verifications")
+          .insert([
+            {
+              doctor_id: data.user.id,
+              license_number: userData.license,
+              status: "pending",
+            },
+          ]);
+
+        if (verificationError) {
+          console.error(
+            "Doctor verification record creation error:",
+            verificationError
+          );
+          // Continue even if verification creation fails
+        }
+      }
+
+      // Set user explicitly so we don't have to wait for auth state change
+      setUser({
+        id: data.user.id,
+        name: userData.fullName,
+        email: email,
+        role: userData.role,
+        isVerified: false,
+        doctorCode: userData.role === "doctor" ? userData.license : null,
+        avatarUrl: null,
+        specialization: userData.specialization || null,
+      });
+
+      toast({
+        title: "Account created successfully",
+        description:
+          userData.role === "doctor"
+            ? "Please complete your doctor verification process"
+            : "Welcome to Health Connect!",
+      });
+
+      return { user: data.user, role: userData.role };
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast({
+        title: "Error",
+        description:
+          error.message ||
+          "An error occurred during sign up. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
       throw error;
     }
   };
@@ -146,7 +328,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Rest of the functions remain unchanged
   const checkVerificationCode = async (verificationCode) => {
     try {
       if (!user || user.role !== "doctor") {
@@ -358,6 +539,7 @@ export function AuthProvider({ children }) {
         isVerifiedDoctor: user?.role === "doctor" && user?.isVerified,
         login,
         logout,
+        signup, // Added new signup function
         verifyDoctorCode,
         resetDoctorCode,
         checkVerificationCode,
