@@ -23,6 +23,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import "./index.css";
 import { Analytics } from "@vercel/analytics/react";
 import AiChatPage from "./pages/AiChatPage";
+import SearchPage from "./pages/SearchPage";
+import NotificationPage from "./pages/Notification";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -85,6 +87,14 @@ const routes = [
   {
     path: "/settings",
     element: <Settings />,
+  },
+  {
+    path: "/search",
+    element: <SearchPage />,
+  },
+  {
+    path: "/notifications",
+    element: <NotificationPage />,
   },
 ];
 
