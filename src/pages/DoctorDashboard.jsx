@@ -13,7 +13,7 @@ import {
   Unlock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { StatsCard } from "@/components/dashboard/StatsCard";
+import { StatsCard } from "../components/dashboard/StatsCard";
 import { AppointmentList } from "@/components/dashboard/AppointmentList";
 import { PatientList } from "@/components/dashboard/PatientList";
 import {
