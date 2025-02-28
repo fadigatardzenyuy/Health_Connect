@@ -39,13 +39,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const licenseSchema = z.object({
-  licenseNumber: z.string().regex(/^[A-Z]{2}\d{6}$/, {
-    message:
-      "License must be 2 uppercase letters followed by 6 digits (e.g., AB123456)",
-  }),
-});
-
 const verificationCodeSchema = z.object({
   verificationCode: z.string().length(6, {
     message: "Verification code must be 6 digits",
@@ -57,21 +50,13 @@ const DoctorDashboard = () => {
     user,
     isDoctor,
     isVerifiedDoctor,
-    requestVerificationCode,
     checkVerificationCode,
+    resetDoctorCode,
   } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRequestingCode, setIsRequestingCode] = useState(false);
-  const [verificationStep, setVerificationStep] = useState("license");
-
-  const licenseForm = useForm({
-    resolver: zodResolver(licenseSchema),
-    defaultValues: {
-      licenseNumber: "",
-    },
-  });
 
   const codeForm = useForm({
     resolver: zodResolver(verificationCodeSchema),
@@ -102,18 +87,6 @@ const DoctorDashboard = () => {
     }
   }, [isDoctor, user, navigate, toast]);
 
-  const handleLicenseSubmit = async (values) => {
-    try {
-      setIsRequestingCode(true);
-      await requestVerificationCode(values.licenseNumber);
-      setVerificationStep("code");
-    } catch (error) {
-      console.error("Error requesting verification code:", error);
-    } finally {
-      setIsRequestingCode(false);
-    }
-  };
-
   const handleVerificationCodeSubmit = async (values) => {
     try {
       setIsVerifying(true);
@@ -122,6 +95,19 @@ const DoctorDashboard = () => {
       console.error("Error verifying code:", error);
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const handleResetCode = async () => {
+    try {
+      setIsRequestingCode(true);
+      if (user?.email) {
+        await resetDoctorCode(user.email);
+      }
+    } catch (error) {
+      console.error("Error resetting code:", error);
+    } finally {
+      setIsRequestingCode(false);
     }
   };
 
@@ -159,135 +145,80 @@ const DoctorDashboard = () => {
                 Doctor Verification Required
               </CardTitle>
               <CardDescription>
-                {verificationStep === "license"
-                  ? "Please enter your medical license number to request a verification code."
-                  : "Please enter the verification code sent to your email."}
+                Please enter your verification code to access the doctor
+                dashboard
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {verificationStep === "license" ? (
-                <Form {...licenseForm}>
-                  <form
-                    onSubmit={licenseForm.handleSubmit(handleLicenseSubmit)}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={licenseForm.control}
-                      name="licenseNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Medical License Number</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Example: AB123456"
-                              className="uppercase"
-                              maxLength={8}
-                              onChange={(e) => {
-                                const value = e.target.value.toUpperCase();
-                                field.onChange(value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Format: 2 uppercase letters followed by 6 digits
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              <Form {...codeForm}>
+                <form
+                  onSubmit={codeForm.handleSubmit(handleVerificationCodeSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={codeForm.control}
+                    name="verificationCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Verification Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter 6-digit code"
+                            maxLength={6}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              );
+                              field.onChange(value);
+                            }}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter the 6-digit code provided during signup
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex flex-col space-y-2">
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={isRequestingCode}
+                      disabled={isVerifying}
                     >
-                      {isRequestingCode ? (
+                      {isVerifying ? (
                         <span className="flex items-center gap-2">
-                          <Mail className="animate-pulse h-4 w-4" />
-                          Sending code...
+                          <Unlock className="animate-pulse h-4 w-4" />
+                          Verifying...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          Send Verification Code
+                          <Unlock className="h-4 w-4" />
+                          Verify Code
                         </span>
                       )}
                     </Button>
-                  </form>
-                </Form>
-              ) : (
-                <Form {...codeForm}>
-                  <form
-                    onSubmit={codeForm.handleSubmit(
-                      handleVerificationCodeSubmit
-                    )}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={codeForm.control}
-                      name="verificationCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Verification Code</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter 6-digit code"
-                              maxLength={6}
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              onChange={(e) => {
-                                const value = e.target.value.replace(
-                                  /[^0-9]/g,
-                                  ""
-                                );
-                                field.onChange(value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter the 6-digit code sent to your email
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex flex-col space-y-2">
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isVerifying}
-                      >
-                        {isVerifying ? (
-                          <span className="flex items-center gap-2">
-                            <Unlock className="animate-pulse h-4 w-4" />
-                            Verifying...
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <Unlock className="h-4 w-4" />
-                            Verify Code
-                          </span>
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="w-full"
-                        onClick={() => setVerificationStep("license")}
-                      >
-                        Back to License Entry
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleResetCode}
+                      disabled={isRequestingCode}
+                    >
+                      {isRequestingCode ? "Requesting..." : "Request New Code"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             </CardContent>
             <CardFooter className="flex justify-center border-t pt-4">
               <p className="text-xs text-muted-foreground text-center">
-                {verificationStep === "license"
-                  ? "We'll send a verification code to the email associated with your account."
-                  : "The verification code is valid for 1 hour. If you don't receive it, you can request a new one."}
+                If you've lost your verification code, you can request a new
+                one.
               </p>
             </CardFooter>
           </Card>
