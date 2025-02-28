@@ -6,20 +6,26 @@ export function Sidebar() {
     {
       id: 1,
       name: "Dr. Sarah",
-      image: "https://ui-avatars.com/api/?name=Dr+Sarah",
+      image: "https://i.ibb.co/3ySwx2Hv/image-2.jpg",
       online: true,
     },
     {
       id: 2,
       name: "Dr. Mike",
-      image: "https://ui-avatars.com/api/?name=Dr+Mike",
+      image: "https://i.ibb.co/BKVdQVB9/image-3.jpg",
       online: false,
     },
     {
       id: 3,
       name: "Dr. Jane",
-      image: "https://ui-avatars.com/api/?name=Dr+Jane",
+      image: "https://i.ibb.co/QjNGjhhJ/image-4.jpg",
       online: true,
+    },
+    {
+      id: 4,
+      name: "Dr. Jane",
+      image: "https://i.ibb.co/dvSCZbQ/image-5.jpg",
+      online: false,
     },
   ];
 

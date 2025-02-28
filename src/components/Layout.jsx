@@ -16,6 +16,7 @@ export function Layout({ children }) {
     name: "",
     email: "",
     initials: "",
+    avatarUrl: "",
   });
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export function Layout({ children }) {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name, email")
+          .select("full_name, email, avatar_url")
           .eq("id", user.id)
           .single();
 
@@ -43,6 +44,7 @@ export function Layout({ children }) {
             name: profile.full_name || "",
             email: profile.email || "",
             initials,
+            avatarUrl: profile.avatar_url || "",
           });
         }
       }
@@ -93,6 +95,12 @@ export function Layout({ children }) {
                     className="text-lg font-medium hover:text-primary"
                   >
                     Doctor Dashboard
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="text-lg font-medium hover:text-primary"
+                  >
+                    My Profile
                   </Link>
                 </nav>
               </SheetContent>
