@@ -108,12 +108,6 @@ export function ProfileMenu({ userData }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
-          <DialogTrigger asChild>
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Edit Profile</span>
-            </DropdownMenuItem>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Profile</DialogTitle>

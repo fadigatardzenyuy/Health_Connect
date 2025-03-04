@@ -1,12 +1,15 @@
 import { Settings } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 export function MobileHeader({ userData }) {
   return (
     <div className="flex justify-between items-center h-16">
       <Avatar>
+        {userData.avatarUrl ? (
+          <AvatarImage src={userData.avatarUrl} alt={userData.name} />
+        ) : null}
         <AvatarFallback>{userData.initials}</AvatarFallback>
       </Avatar>
       <Link to="/dashboard" className="flex items-center">
