@@ -18,6 +18,7 @@ export function MainFeed() {
   useEffect(() => {
     fetchPosts();
 
+    // Subscribe to realtime updates for posts
     const channel = supabase
       .channel("public:posts")
       .on(
@@ -29,7 +30,7 @@ export function MainFeed() {
         },
         (payload) => {
           console.log("Change received!", payload);
-          fetchPosts();
+          fetchPosts(); // Refresh posts when any change occurs
         }
       )
       .subscribe((status) => {
@@ -44,6 +45,7 @@ export function MainFeed() {
   const fetchPosts = async () => {
     try {
       console.log("Fetching posts...");
+
       const { data, error } = await supabase
         .from("posts")
         .select(
@@ -56,7 +58,8 @@ export function MainFeed() {
           comments_count,
           repost_count, 
           views_count,
-          author:profiles(
+          author_id,
+          profiles!posts_author_id_fkey(
             full_name,
             avatar_url,
             role,
@@ -76,6 +79,9 @@ export function MainFeed() {
         return;
       }
 
+      console.log("Raw posts data:", data);
+
+      // Transform the data to match our Post structure
       const transformedPosts = data.map((post) => ({
         id: post.id,
         content: post.content,
@@ -86,10 +92,10 @@ export function MainFeed() {
         repost_count: post.repost_count || 0,
         views_count: post.views_count || 0,
         author: {
-          full_name: post.author?.[0]?.full_name || "Unknown User",
-          avatar_url: post.author?.[0]?.avatar_url || "",
-          role: post.author?.[0]?.role || "user",
-          is_verified: post.author?.[0]?.is_verified || false,
+          full_name: post.profiles?.full_name || "Unknown User",
+          avatar_url: post.profiles?.avatar_url || "",
+          role: post.profiles?.role || "user",
+          is_verified: post.profiles?.is_verified || false,
         },
       }));
 
@@ -123,7 +129,7 @@ export function MainFeed() {
           </TabsList>
 
           <TabsContent value="search" className="p-4">
-            <DoctorSearch />
+            <DoctorSearch onDoctorSelect={() => {}} />
           </TabsContent>
 
           <TabsContent value="post" className="p-4">

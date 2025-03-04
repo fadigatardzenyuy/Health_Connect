@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change event:", event); // Better logging
+      console.log("Auth state change event:", event);
 
       // Set loading to true only for sign-in/sign-up events
       if (event === "SIGNED_IN" || event === "SIGNED_UP") {
@@ -255,6 +255,15 @@ export function AuthProvider({ children }) {
 
       // If doctor, create verification record
       if (userData.role === "doctor" && userData.license) {
+        // Generate a verification code for doctors (from first implementation)
+        const verificationCode = Math.floor(
+          100000 + Math.random() * 900000
+        ).toString();
+
+        // Set code expiry to 24 hours from now
+        const codeExpiry = new Date();
+        codeExpiry.setHours(codeExpiry.getHours() + 24);
+
         const { error: verificationError } = await supabase
           .from("doctor_verifications")
           .insert([
@@ -262,6 +271,8 @@ export function AuthProvider({ children }) {
               doctor_id: data.user.id,
               license_number: userData.license,
               status: "pending",
+              verification_code: verificationCode,
+              code_expiry: codeExpiry.toISOString(),
             },
           ]);
 
@@ -271,6 +282,12 @@ export function AuthProvider({ children }) {
             verificationError
           );
           // Continue even if verification creation fails
+        } else {
+          // For development purposes, show the code in a toast
+          toast({
+            title: "Verification Code Generated",
+            description: `Your verification code is: ${verificationCode}`,
+          });
         }
       }
 
@@ -334,6 +351,13 @@ export function AuthProvider({ children }) {
         throw new Error("Only doctors can verify codes");
       }
 
+      console.log(
+        "Checking verification code:",
+        verificationCode,
+        "for user:",
+        user.id
+      );
+
       // Get the verification record
       const { data, error } = await supabase
         .from("doctor_verifications")
@@ -343,13 +367,18 @@ export function AuthProvider({ children }) {
         .single();
 
       if (error || !data) {
+        console.error("Verification error:", error);
         throw new Error("Invalid verification code");
       }
 
+      console.log("Verification data found:", data);
+
       // Check if code is expired
-      const codeExpiry = new Date(data.code_expiry);
-      if (codeExpiry < new Date()) {
-        throw new Error("Verification code has expired");
+      if (data.code_expiry) {
+        const codeExpiry = new Date(data.code_expiry);
+        if (codeExpiry < new Date()) {
+          throw new Error("Verification code has expired");
+        }
       }
 
       // Update verification status
@@ -448,16 +477,29 @@ export function AuthProvider({ children }) {
       const codeExpiry = new Date();
       codeExpiry.setHours(codeExpiry.getHours() + 24);
 
+      console.log(
+        "Generated new verification code:",
+        verificationCode,
+        "for user:",
+        user.id
+      );
+
       // Update doctor_verifications table with the new code
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("doctor_verifications")
         .update({
           verification_code: verificationCode,
           code_expiry: codeExpiry.toISOString(),
         })
-        .eq("doctor_id", user.id);
+        .eq("doctor_id", user.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating verification code:", error);
+        throw error;
+      }
+
+      console.log("Verification code updated:", data);
 
       toast({
         title: "Verification Code Reset",
@@ -539,7 +581,7 @@ export function AuthProvider({ children }) {
         isVerifiedDoctor: user?.role === "doctor" && user?.isVerified,
         login,
         logout,
-        signup, // Added new signup function
+        signup, // Added from second implementation
         verifyDoctorCode,
         resetDoctorCode,
         checkVerificationCode,

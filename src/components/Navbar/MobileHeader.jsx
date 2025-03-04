@@ -9,7 +9,7 @@ export function MobileHeader({ userData }) {
       <Avatar>
         <AvatarFallback>{userData.initials}</AvatarFallback>
       </Avatar>
-      <Link to="/" className="flex items-center">
+      <Link to="/dashboard" className="flex items-center">
         <h1 className="text-lg font-bold text-primary">WAHPITA</h1>
       </Link>
       <Button variant="ghost" size="icon" asChild>
