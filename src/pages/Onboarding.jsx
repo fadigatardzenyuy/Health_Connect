@@ -26,14 +26,13 @@ const Onboarding = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("patient"); // Track selected role
 
   useEffect(() => {
     setIsLoaded(true);
-    // Check if device is mobile
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -75,7 +74,75 @@ const Onboarding = () => {
     },
   ];
 
-  // Content steps for mobile
+  // Role selection toggle
+  const RoleToggle = () => (
+    <div className="flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full p-1 space-x-1">
+      <Button
+        variant={selectedRole === "patient" ? "solid" : "ghost"}
+        onClick={() => setSelectedRole("patient")}
+        className={`rounded-full text-sm ${
+          selectedRole === "patient"
+            ? "bg-emerald-500 text-white"
+            : "text-white hover:bg-white/10"
+        }`}
+      >
+        Patient
+      </Button>
+      <Button
+        variant={selectedRole === "doctor" ? "solid" : "ghost"}
+        onClick={() => setSelectedRole("doctor")}
+        className={`rounded-full text-sm ${
+          selectedRole === "doctor"
+            ? "bg-teal-500 text-white"
+            : "text-white hover:bg-white/10"
+        }`}
+      >
+        Provider
+      </Button>
+    </div>
+  );
+
+  // Role-specific content
+  const roleContent = {
+    patient: {
+      icon: <Users className="h-6 w-6 text-emerald-600" />,
+      title: "For Patients",
+      features: [
+        {
+          icon: <Calendar className="h-4 w-4 mr-2 text-emerald-500" />,
+          text: "Book consultations online",
+        },
+        {
+          icon: <FileText className="h-4 w-4 mr-2 text-emerald-500" />,
+          text: "Access medical records",
+        },
+      ],
+      button: {
+        text: "Sign Up as Patient",
+        onClick: () => navigate("/signup?role=patient"),
+      },
+    },
+    doctor: {
+      icon: <Stethoscope className="h-6 w-6 text-teal-600" />,
+      title: "For Providers",
+      features: [
+        {
+          icon: <Calendar className="h-4 w-4 mr-2 text-teal-500" />,
+          text: "Manage appointments",
+        },
+        {
+          icon: <Zap className="h-4 w-4 mr-2 text-teal-500" />,
+          text: "AI-powered diagnostics",
+        },
+      ],
+      button: {
+        text: "Join as Healthcare Provider",
+        onClick: () => navigate("/signup?role=doctor"),
+      },
+    },
+  };
+
+  // Steps for mobile
   const steps = [
     // Step 0: Intro & Stats
     <motion.div
@@ -141,7 +208,8 @@ const Onboarding = () => {
         onClick={() => setActiveStep(1)}
         className="mt-4 px-6 py-2 bg-emerald-500 text-white rounded-full flex items-center"
       >
-        Continue <ArrowRight className="ml-2 h-4 w-4" />
+        Get Started
+        <ArrowRight className="ml-2 h-4 w-4" />
       </motion.button>
     </motion.div>,
 
@@ -153,6 +221,7 @@ const Onboarding = () => {
       className="flex flex-col items-center justify-center h-full space-y-4"
     >
       <h2 className="text-2xl font-bold text-white mb-2">Choose Your Role</h2>
+      <RoleToggle />
 
       <motion.div
         initial={{ y: 20, opacity: 0 }}
@@ -162,22 +231,15 @@ const Onboarding = () => {
       >
         <div className="flex items-center mb-3">
           <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center mr-3">
-            <Users className="h-5 w-5 text-emerald-600" />
+            {roleContent[selectedRole].icon}
           </div>
-          <h3 className="text-xl font-bold text-emerald-800">For Patients</h3>
+          <h3 className="text-xl font-bold text-emerald-800">
+            {roleContent[selectedRole].title}
+          </h3>
         </div>
 
         <ul className="space-y-2 text-sm text-gray-700 mb-3">
-          {[
-            {
-              icon: <Calendar className="h-4 w-4 mr-2 text-emerald-500" />,
-              text: "Book consultations online",
-            },
-            {
-              icon: <FileText className="h-4 w-4 mr-2 text-emerald-500" />,
-              text: "Access medical records",
-            },
-          ].map((item, i) => (
+          {roleContent[selectedRole].features.map((item, i) => (
             <li key={i} className="flex items-center">
               {item.icon}
               {item.text}
@@ -186,51 +248,10 @@ const Onboarding = () => {
         </ul>
 
         <Button
-          onClick={() => navigate("/signup?role=patient")}
+          onClick={roleContent[selectedRole].button.onClick}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm py-1"
         >
-          Sign Up as Patient
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </motion.div>
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="w-full p-4 bg-white/90 backdrop-blur-md rounded-xl border border-teal-500/20"
-      >
-        <div className="flex items-center mb-3">
-          <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
-            <Stethoscope className="h-5 w-5 text-teal-600" />
-          </div>
-          <h3 className="text-xl font-bold text-teal-800">For Providers</h3>
-        </div>
-
-        <ul className="space-y-2 text-sm text-gray-700 mb-3">
-          {[
-            {
-              icon: <Calendar className="h-4 w-4 mr-2 text-teal-500" />,
-              text: "Manage appointments",
-            },
-            {
-              icon: <Zap className="h-4 w-4 mr-2 text-teal-500" />,
-              text: "AI-powered diagnostics",
-            },
-          ].map((item, i) => (
-            <li key={i} className="flex items-center">
-              {item.icon}
-              {item.text}
-            </li>
-          ))}
-        </ul>
-
-        <Button
-          onClick={() => navigate("/signup?role=doctor")}
-          variant="outline"
-          className="w-full border-2 border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white text-sm py-1"
-        >
-          Join as Healthcare Provider
+          {roleContent[selectedRole].button.text}
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </motion.div>
@@ -329,51 +350,16 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Background with enhanced effects */}
       <div className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/90 via-emerald-800/85 to-teal-900/90" />
           <div className="absolute inset-0 bg-[url('https://i.ibb.co/mVhPFYy3/A-doctor-in-a-modern-clinic-treating-a-patient-The-doctor-a-middle-aged-male-is-examining-the-patien.png')] opacity-10" />
-
-          {/* Abstract medical patterns */}
-          <div className="absolute inset-0 opacity-20">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern
-                  id="medicalPattern"
-                  x="0"
-                  y="0"
-                  width="100"
-                  height="100"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M30,50 L70,50 M50,30 L50,70"
-                    stroke="white"
-                    strokeWidth="2"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="20"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="1"
-                  />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#medicalPattern)" />
-            </svg>
-          </div>
         </div>
 
-        {/* Content - Conditional rendering based on device size */}
         <div className="relative z-10 w-full h-full px-4 py-6 flex items-center justify-center">
           {isMobile ? (
-            // Mobile view with stepped approach
             <div className="w-full max-w-md">{steps[activeStep]}</div>
           ) : (
-            // Desktop view (original content but slightly condensed)
             <motion.div
               initial="hidden"
               animate={isLoaded ? "visible" : "hidden"}
@@ -441,107 +427,82 @@ const Onboarding = () => {
                 ))}
               </motion.div>
 
-              {/* Card Options */}
-              <motion.div
-                variants={fadeIn}
-                custom={4}
-                className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto"
-              >
-                {/* Patient Card */}
-                <motion.div
-                  className="group relative"
-                  whileHover={{ scale: 1.03 }}
-                >
-                  <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-emerald-500/20">
-                    <div className="flex items-center mb-4">
-                      <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mr-4">
-                        <Users className="h-6 w-6 text-emerald-600" />
+              {/* Role Selection */}
+              <motion.div variants={fadeIn} custom={4} className="space-y-4">
+                <RoleToggle />
+                <motion.div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+                  {/* Patient Card */}
+                  <motion.div
+                    className="group relative"
+                    whileHover={{ scale: 1.03 }}
+                  >
+                    <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-emerald-500/20">
+                      <div className="flex items-center mb-4">
+                        <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mr-4">
+                          {roleContent.patient.icon}
+                        </div>
+                        <h3 className="text-xl font-bold text-emerald-800">
+                          {roleContent.patient.title}
+                        </h3>
                       </div>
-                      <h3 className="text-xl font-bold text-emerald-800">
-                        For Patients
-                      </h3>
+
+                      <ul className="space-y-2 text-gray-700 mb-4">
+                        {roleContent.patient.features.map((item, i) => (
+                          <li key={i} className="flex items-center">
+                            {item.icon}
+                            {item.text}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <Button
+                        onClick={roleContent.patient.button.onClick}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        {roleContent.patient.button.text}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
+                  </motion.div>
 
-                    <ul className="space-y-2 text-gray-700 mb-4">
-                      {[
-                        {
-                          icon: (
-                            <Calendar className="h-4 w-4 mr-2 text-emerald-500" />
-                          ),
-                          text: "Book consultations online",
-                        },
-                        {
-                          icon: (
-                            <FileText className="h-4 w-4 mr-2 text-emerald-500" />
-                          ),
-                          text: "Access medical records",
-                        },
-                      ].map((item, i) => (
-                        <li key={i} className="flex items-center">
-                          {item.icon}
-                          {item.text}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      onClick={() => navigate("/signup?role=patient")}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                    >
-                      Sign Up as Patient
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </motion.div>
-
-                {/* Provider Card */}
-                <motion.div
-                  className="group relative"
-                  whileHover={{ scale: 1.03 }}
-                >
-                  <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-teal-500/20">
-                    <div className="flex items-center mb-4">
-                      <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center mr-4">
-                        <Stethoscope className="h-6 w-6 text-teal-600" />
+                  {/* Provider Card */}
+                  <motion.div
+                    className="group relative"
+                    whileHover={{ scale: 1.03 }}
+                  >
+                    <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-teal-500/20">
+                      <div className="flex items-center mb-4">
+                        <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center mr-4">
+                          {roleContent.doctor.icon}
+                        </div>
+                        <h3 className="text-xl font-bold text-teal-800">
+                          {roleContent.doctor.title}
+                        </h3>
                       </div>
-                      <h3 className="text-xl font-bold text-teal-800">
-                        For Healthcare Providers
-                      </h3>
+
+                      <ul className="space-y-2 text-gray-700 mb-4">
+                        {roleContent.doctor.features.map((item, i) => (
+                          <li key={i} className="flex items-center">
+                            {item.icon}
+                            {item.text}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <Button
+                        onClick={roleContent.doctor.button.onClick}
+                        variant="outline"
+                        className="w-full border-2 border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white"
+                      >
+                        {roleContent.doctor.button.text}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
-
-                    <ul className="space-y-2 text-gray-700 mb-4">
-                      {[
-                        {
-                          icon: (
-                            <Calendar className="h-4 w-4 mr-2 text-teal-500" />
-                          ),
-                          text: "Manage appointments",
-                        },
-                        {
-                          icon: <Zap className="h-4 w-4 mr-2 text-teal-500" />,
-                          text: "AI-powered diagnostics",
-                        },
-                      ].map((item, i) => (
-                        <li key={i} className="flex items-center">
-                          {item.icon}
-                          {item.text}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      onClick={() => navigate("/signup?role=doctor")}
-                      variant="outline"
-                      className="w-full border-2 border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white"
-                    >
-                      Join as Healthcare Provider
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
+                  </motion.div>
                 </motion.div>
               </motion.div>
 
-              {/* Features Section - Condensed */}
+              {/* Features Section */}
               <motion.div
                 variants={fadeIn}
                 custom={5}
