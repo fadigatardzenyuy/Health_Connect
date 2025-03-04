@@ -2,7 +2,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client"; // Change this import
 import App from "./App";
-// import "./index.css"; // Adjust the path as necessary
 
 // Get the root element
 const container = document.getElementById("app");
