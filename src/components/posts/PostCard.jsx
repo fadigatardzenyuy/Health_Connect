@@ -312,7 +312,7 @@ export function PostCard({ post }) {
               />
               <div className="flex justify-end">
                 <Button size="sm" onClick={submitComment} className="text-xs">
-                  Post
+                  comment
                 </Button>
               </div>
             </div>
