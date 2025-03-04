@@ -25,6 +25,7 @@ import { Analytics } from "@vercel/analytics/react";
 import AiChatPage from "./pages/AiChatPage";
 import SearchPage from "./pages/SearchPage";
 import NotificationPage from "./pages/Notification";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -108,6 +109,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Analytics />
+        <SpeedInsights />;
         <RouterProvider router={router} />
       </TooltipProvider>
     </AuthProvider>
