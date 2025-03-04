@@ -109,7 +109,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Analytics />
-        <SpeedInsights />;
+        <SpeedInsights />
         <RouterProvider router={router} />
       </TooltipProvider>
     </AuthProvider>
