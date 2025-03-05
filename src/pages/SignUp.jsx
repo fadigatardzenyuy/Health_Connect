@@ -13,7 +13,6 @@ import {
   Heart,
   ShieldCheck,
   Clock,
-  Users,
   MessageSquare,
   Calendar,
 } from "lucide-react";
@@ -27,6 +26,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { checkVerificationCode } from "@/services/auth";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -90,47 +90,36 @@ const SignUp = () => {
     }
   };
 
-  // Generate a verification code for doctor accounts
-  const generateVerificationCode = () => {
-    // Generate a random 6-digit code
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-
-  // Create verification record for doctor
   const createDoctorVerification = async (userId, licenseNumber) => {
     try {
-      // Generate a 6-digit verification code
-      const verificationCode = generateVerificationCode();
-
-      // Create code expiry set to 24 hours from now
-      const codeExpiry = new Date();
-      codeExpiry.setHours(codeExpiry.getHours() + 24);
-
-      // Create a verification record
+      const verificationCode = Math.floor(
+        100000 + Math.random() * 900000
+      ).toString();
       const { data, error } = await supabase
         .from("doctor_verifications")
         .insert({
           doctor_id: userId,
           license_number: licenseNumber,
           verification_code: verificationCode,
-          code_expiry: codeExpiry.toISOString(),
           status: "pending",
         })
         .select();
 
       if (error) {
+        console.error("Error creating verification record:", error);
         throw error;
       }
 
       return verificationCode;
     } catch (error) {
+      console.error("Verification record creation error:", error);
       throw error;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return; // Prevent double submission
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
@@ -140,7 +129,6 @@ const SignUp = () => {
       const fullName = formData.get("name");
       const license = formData.get("license")?.toUpperCase();
 
-      // Basic validation
       if (!email || !password || !fullName) {
         toast({
           title: "Missing Information",
@@ -151,21 +139,17 @@ const SignUp = () => {
         return;
       }
 
-      // Validate license format for doctors
-      if (role === "doctor") {
-        if (!license || !validateLicenseFormat(license)) {
-          toast({
-            title: "Invalid License Format",
-            description:
-              "Please enter a valid license number (2 uppercase letters followed by 6 digits)",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
+      if (role === "doctor" && (!license || !validateLicenseFormat(license))) {
+        toast({
+          title: "Invalid License Format",
+          description:
+            "Please enter a valid license number (2 uppercase letters followed by 6 digits)",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
 
-      // Create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -207,13 +191,12 @@ const SignUp = () => {
         return;
       }
 
-      // After creating the auth user, update the profile directly (in case RLS policy prevented trigger)
       await supabase.from("profiles").upsert({
         id: data.user.id,
         full_name: fullName,
         email: email,
         role: role,
-        is_verified: role !== "doctor", // Only patients are auto-verified
+        is_verified: role !== "doctor",
         medical_license: role === "doctor" ? license : null,
         patient_id:
           role === "patient"
@@ -222,49 +205,32 @@ const SignUp = () => {
       });
 
       if (role === "doctor") {
-        // For doctors, show verification section
         setUserId(data.user.id);
-
         try {
-          // Create verification record and get code
           const code = await createDoctorVerification(data.user.id, license);
-
-          // Show success toast for account creation
           toast({
             title: "Account created successfully",
             description: "Please use your verification code to complete setup",
           });
-
-          // Display verification section
           setShowVerificationSection(true);
-
-          // Show code in toast for demo purposes (in a real app, this would be sent via a secure channel)
           toast({
             title: "Your verification code",
             description: `For demo purposes, here is your code: ${code}`,
           });
-
-          // No navigation here - stay on verification section
-          setIsLoading(false);
         } catch (verificationError) {
-          // Still allow the user to continue with account creation
           toast({
             title: "Account created with warnings",
             description:
               "Your account was created but there was an issue with doctor verification. Please contact support.",
             variant: "destructive",
           });
-          // Navigate to doctor dashboard anyway despite verification issue
-          navigate("/doctor-dashboard");
+          setShowVerificationSection(true);
         }
       } else {
-        // For patients, redirect to dashboard immediately
         toast({
           title: "Account created successfully",
           description: "Welcome to Health Connect!",
         });
-
-        // Navigate to patient dashboard immediately without timeout
         navigate("/dashboard");
       }
     } catch (error) {
@@ -284,76 +250,32 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      // Check the verification code
-      const { data, error } = await supabase
-        .from("doctor_verifications")
-        .select("*")
-        .eq("doctor_id", userId)
-        .eq("verification_code", verificationCode)
-        .single();
-
-      if (error || !data) {
+      if (!verificationCode || verificationCode.length !== 6) {
         toast({
-          title: "Verification Failed",
-          description: "Invalid verification code. Please try again.",
+          title: "Invalid Code",
+          description: "Please enter a valid 6-digit verification code",
           variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
 
-      // Check if code is expired
-      const codeExpiry = new Date(data.code_expiry);
-      if (codeExpiry < new Date()) {
-        toast({
-          title: "Verification Failed",
-          description:
-            "Verification code has expired. Please request a new one.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Update verification status
-      const { error: updateError } = await supabase
-        .from("doctor_verifications")
-        .update({
-          status: "verified",
-          verification_date: new Date().toISOString(),
-          verification_code: null, // Clear the code after successful verification
-          code_expiry: null,
-        })
-        .eq("doctor_id", userId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      // Update the user's profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ is_verified: true })
-        .eq("id", userId);
-
-      if (profileError) {
-        throw profileError;
-      }
-
-      // Success message
+      await checkVerificationCode(verificationCode, userId);
       toast({
         title: "Verification Successful",
         description: "Your doctor account has been verified.",
       });
-
-      // Navigate to doctor dashboard immediately without timeout
       navigate("/doctor-dashboard");
     } catch (error) {
       toast({
         title: "Verification Error",
-        description: "An error occurred during verification. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred during verification. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -363,8 +285,6 @@ const SignUp = () => {
       title: "Coming Soon",
       description: `Sign up with ${provider} functionality will be available soon!`,
     });
-
-    // Immediate navigation without timeout for demo
     navigate(role === "doctor" ? "/doctor-dashboard" : "/dashboard");
   };
 

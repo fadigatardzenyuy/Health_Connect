@@ -7,6 +7,7 @@ import {
   RouterProvider,
   Navigate,
 } from "react-router-dom";
+import { useState } from "react";
 import Index from "./pages/Index";
 import VideoConsultation from "./pages/VideoConsultation";
 import AudioConsultation from "./pages/AudioConsultation";
@@ -27,9 +28,6 @@ import SearchPage from "./pages/SearchPage";
 import NotificationPage from "./pages/Notification";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
-// Create the query client for react-query
-const queryClient = new QueryClient();
-
 // Define your routes
 const routes = [
   {
@@ -40,7 +38,6 @@ const routes = [
     path: "/dashboard",
     element: <Index />,
   },
-
   {
     path: "/aiDoc",
     element: <AiChatPage />,
@@ -102,18 +99,23 @@ const routes = [
 // Create a browser router
 const router = createBrowserRouter(routes);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Analytics />
-        <SpeedInsights />
-        <RouterProvider router={router} />
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Initialize QueryClient with useState
+  const [queryClient] = useState(() => new QueryClient());
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Analytics />
+          <SpeedInsights />
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
