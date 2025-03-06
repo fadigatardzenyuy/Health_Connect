@@ -1,3 +1,6 @@
+Here’s the **README.md** file transformed into proper Markdown syntax for use in Visual Studio Code (VSCode). Simply copy and paste this into a new file named `README.md` in your project.
+
+````markdown
 # Health Connect
 
 ## Overview
@@ -7,6 +10,8 @@
 ## Project Info
 
 **Live Demo**: [(https://health-connect-pi.vercel.app/)]
+
+---
 
 ## Table of Contents
 
@@ -18,6 +23,8 @@
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
+
+---
 
 ## Features
 
@@ -112,10 +119,10 @@ To set up the project locally, follow these instructions:
 ### Installation
 
 1. **Clone the Repository**:
-
    ```sh
    git clone https://github.com/fadigatardzenyuy/Health_Connect.git
    ```
+````
 
 2. **Navigate to the Project Directory**:
 
@@ -230,9 +237,13 @@ We welcome contributions! Please follow these steps to contribute:
    - Go to the original repository and click "New Pull Request".
    - Select your branch and submit the pull request.
 
+---
+
 ## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+---
 
 ## Acknowledgments
 
