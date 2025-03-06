@@ -14,6 +14,8 @@ import { Calendar, Clock, FileText, Mail, Phone, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MedicalRecordsList } from "./MedicalRecordsList";
+import { VitalSignsTracker } from "./VitalSignsTracker";
 
 export function PatientDetail({ patientId, onClose }) {
   const { toast } = useToast();
@@ -214,42 +216,23 @@ export function PatientDetail({ patientId, onClose }) {
 
         <Separator />
 
-        <Tabs defaultValue="history">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="history">Medical History</TabsTrigger>
+        <Tabs defaultValue="records">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="records">Medical Records</TabsTrigger>
+            <TabsTrigger value="vitals">Vital Signs</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
-          <TabsContent value="history">
-            <div className="space-y-4 mt-4">
-              {patient.medicalHistory.map((record, index) => (
-                <Card key={index}>
-                  <CardHeader className="p-4 pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-base">
-                          {record.diagnosis}
-                        </CardTitle>
-                        <CardDescription>
-                          {record.date} • {record.doctor}
-                        </CardDescription>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <FileText className="h-4 w-4 mr-1" />
-                        Report
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-sm text-muted-foreground">
-                      {record.notes}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+
+          <TabsContent value="records">
+            <MedicalRecordsList patientId={patientId || ""} />
           </TabsContent>
+
+          <TabsContent value="vitals">
+            <VitalSignsTracker patientId={patientId || ""} />
+          </TabsContent>
+
           <TabsContent value="notes">
-            <Card className="mt-4">
+            <Card>
               <CardContent className="p-4">
                 <textarea
                   className="w-full min-h-[200px] p-3 border rounded-md resize-none"

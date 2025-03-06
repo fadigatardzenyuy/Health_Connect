@@ -14,6 +14,7 @@ import { UpcomingConsultations } from "@/components/dashboard/UpcomingConsultati
 import { PatientSummary } from "@/components/dashboard/PatientSummary";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
 const DoctorDashboard = () => {
   const { user, isDoctor, isVerifiedDoctor } = useAuth();
@@ -22,6 +23,12 @@ const DoctorDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    upcomingAppointments: 0,
+    todayConsultations: 0,
+    activeCases: 0,
+  });
 
   useEffect(() => {
     console.log(
@@ -54,28 +61,72 @@ const DoctorDashboard = () => {
     return () => clearTimeout(timer);
   }, [isDoctor, user, navigate, toast]);
 
-  const stats = [
-    {
-      title: "Total Patients",
-      value: "2,420",
-      icon: Users,
-    },
-    {
-      title: "Upcoming Appointments",
-      value: "15",
-      icon: Clock,
-    },
-    {
-      title: "Today's Consultations",
-      value: "8",
-      icon: Calendar,
-    },
-    {
-      title: "Active Cases",
-      value: "48",
-      icon: Activity,
-    },
-  ];
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { count: patientsCount, error: patientsError } = await supabase
+          .from("appointments")
+          .select("patient_id", { count: "exact", head: true })
+          .eq("doctor_id", user.id)
+          .distinctOn("patient_id");
+
+        if (patientsError) throw patientsError;
+
+        const today = new Date().toISOString().split("T")[0];
+        const { count: upcomingCount, error: upcomingError } = await supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("doctor_id", user.id)
+          .gte("appointment_date", today)
+          .not("status", "eq", "cancelled");
+
+        if (upcomingError) throw upcomingError;
+
+        const { count: todayCount, error: todayError } = await supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("doctor_id", user.id)
+          .eq("appointment_date", today)
+          .not("status", "eq", "cancelled");
+
+        if (todayError) throw todayError;
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
+
+        const { count: activeCasesCount, error: activeCasesError } =
+          await supabase
+            .from("appointments")
+            .select("patient_id", { count: "exact", head: true })
+            .eq("doctor_id", user.id)
+            .gte("appointment_date", thirtyDaysAgoStr)
+            .distinctOn("patient_id");
+
+        if (activeCasesError) throw activeCasesError;
+
+        setStats({
+          totalPatients: patientsCount || 0,
+          upcomingAppointments: upcomingCount || 0,
+          todayConsultations: todayCount || 0,
+          activeCases: activeCasesCount || 0,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        toast({
+          title: "Failed to load dashboard stats",
+          description: "There was an error loading your dashboard statistics",
+          variant: "destructive",
+        });
+      }
+    };
+
+    if (user?.id && isVerifiedDoctor) {
+      fetchDashboardStats();
+    }
+  }, [user?.id, isVerifiedDoctor, toast]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -116,6 +167,29 @@ const DoctorDashboard = () => {
       </Layout>
     );
   }
+
+  const dashboardStats = [
+    {
+      title: "Total Patients",
+      value: stats.totalPatients.toString(),
+      icon: Users,
+    },
+    {
+      title: "Upcoming Appointments",
+      value: stats.upcomingAppointments.toString(),
+      icon: Clock,
+    },
+    {
+      title: "Today's Consultations",
+      value: stats.todayConsultations.toString(),
+      icon: Calendar,
+    },
+    {
+      title: "Active Cases",
+      value: stats.activeCases.toString(),
+      icon: Activity,
+    },
+  ];
 
   return (
     <Layout>
@@ -164,7 +238,7 @@ const DoctorDashboard = () => {
 
           <TabsContent value="overview" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.map((stat) => (
+              {dashboardStats.map((stat) => (
                 <StatsCard
                   key={stat.title}
                   title={stat.title}

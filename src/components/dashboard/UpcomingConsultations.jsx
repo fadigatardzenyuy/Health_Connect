@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 export function UpcomingConsultations() {
   const navigate = useNavigate();
@@ -28,42 +29,49 @@ export function UpcomingConsultations() {
       if (!user?.id) return;
 
       try {
-        // Simulate API delay
-        setTimeout(() => {
-          // Mock data for demonstration
-          setConsultations([
-            {
-              id: "1",
-              patientName: "John Doe",
-              time: "9:00 AM",
-              date: "Today",
-              type: "video",
-            },
-            {
-              id: "2",
-              patientName: "Jane Smith",
-              time: "11:30 AM",
-              date: "Today",
-              type: "audio",
-            },
-            {
-              id: "3",
-              patientName: "Alice Johnson",
-              time: "2:15 PM",
-              date: "Tomorrow",
-              type: "video",
-            },
-          ]);
-          setIsLoading(false);
-        }, 1500);
+        setIsLoading(true);
+
+        const today = new Date().toISOString().split("T")[0];
+
+        const { data, error } = await supabase
+          .from("appointments")
+          .select(
+            `
+            id,
+            patient_id,
+            doctor_id,
+            appointment_date,
+            appointment_time,
+            status,
+            patient:patient_id(full_name)
+          `
+          )
+          .eq("doctor_id", user.id)
+          .eq("appointment_date", today)
+          .order("appointment_time", { ascending: true });
+
+        if (error) throw error;
+
+        const formattedConsultations = (data || []).map((consult) => ({
+          ...consult,
+          type: Math.random() > 0.5 ? "video" : "audio",
+        }));
+
+        setConsultations(formattedConsultations);
       } catch (error) {
         console.error("Error fetching consultations:", error);
+        toast({
+          title: "Failed to load consultations",
+          description: "Could not retrieve today's consultations",
+          variant: "destructive",
+        });
+      } finally {
         setIsLoading(false);
       }
     };
 
     fetchConsultations();
-  }, [user?.id]);
+  }, [user?.id, toast]);
 
   const handleStartConsultation = (type, id) => {
     toast({
@@ -72,9 +80,9 @@ export function UpcomingConsultations() {
     });
 
     if (type === "video") {
-      navigate(`/video-consultation?id=${id}`);
+      navigate(`/video-consultation/${id}`);
     } else {
-      navigate(`/audio-consultation?id=${id}`);
+      navigate(`/audio-consultation/${id}`);
     }
   };
 
@@ -93,7 +101,6 @@ export function UpcomingConsultations() {
       <CardContent>
         <div className="space-y-4">
           {isLoading ? (
-            // Loading state
             Array(3)
               .fill(0)
               .map((_, i) => (
@@ -140,16 +147,19 @@ export function UpcomingConsultations() {
                     </div>
                     <div>
                       <h4 className="font-medium">
-                        {consultation.patientName}
+                        {consultation.patient?.full_name || "Patient"}
                       </h4>
                       <div className="flex items-center text-sm text-muted-foreground gap-4">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {consultation.date}
+                          {format(
+                            new Date(consultation.appointment_date),
+                            "PP"
+                          )}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {consultation.time}
+                          {consultation.appointment_time}
                         </span>
                       </div>
                     </div>
@@ -177,12 +187,10 @@ export function UpcomingConsultations() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      window.alert(
-                        `View records for ${consultation.patientName}`
-                      )
+                      navigate(`/appointment-details/${consultation.id}`)
                     }
                   >
-                    View Records
+                    View Details
                   </Button>
                   <Button
                     size="sm"

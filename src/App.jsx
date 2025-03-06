@@ -11,7 +11,7 @@ import { useState } from "react";
 import Index from "./pages/Index";
 import VideoConsultation from "./pages/VideoConsultation";
 import AudioConsultation from "./pages/AudioConsultation";
-import ConsultationBooking from "./pages/ConsultationBooking";
+import { ConsultationBooking } from "./pages/ConsultationBooking";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import Messages from "./pages/Messages";
 import Onboarding from "./pages/Onboarding";

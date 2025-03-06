@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { VideoPreview } from "./consultation/VideoPreview";
 import { ConsultationForm } from "./consultation/ConsultationForm";
 import { TimeSlotPicker } from "./consultation/TimeSlotPicker";
 import { PrescriptionForm } from "./consultation/PrescriptionForm";
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DoctorSearch } from "./DoctorSearch";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { VideoPreview } from "./consultation/VideoPreview";
 
 export function ConsultationBooking() {
   const [selectedDate, setSelectedDate] = useState();
