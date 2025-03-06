@@ -1,30 +1,203 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuthState } from "@/hooks/useAuthState";
-import {
-  loginUser,
-  logoutUser,
-  verifyDoctorCode,
-  checkVerificationCode,
-  resetDoctorVerificationCode,
-  updateUserProfile,
-  checkDoctorVerificationStatus,
-  getDoctorVerificationDetails,
-} from "@/services/auth";
+import { supabase } from "@/lib/supabase";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const { user, setUser, isLoading } = useAuthState();
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const { toast } = useToast();
+
+  // Initial auth state check - runs only once
+  useEffect(() => {
+    const checkInitialAuthState = async () => {
+      try {
+        // Get current session
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session) {
+          const { data: userData, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          if (!error && userData) {
+            setUser({
+              id: userData.id,
+              name: userData.full_name,
+              email: userData.email,
+              role: userData.role,
+              isVerified: userData.is_verified,
+              doctorCode: userData.doctor_code,
+              avatarUrl: userData.avatar_url,
+              specialization: userData.specialization,
+            });
+          } else {
+            // Handle case where profile doesn't exist yet but user is authenticated
+            const userMeta = session.user.user_metadata || {};
+
+            try {
+              // Create profile if it doesn't exist
+              const profileData = {
+                id: session.user.id,
+                email: session.user.email,
+                full_name: userMeta.full_name || "",
+                role: userMeta.role || "patient",
+                is_verified: false,
+                avatar_url: null,
+                doctor_code: userMeta.license_number || null,
+                specialization: userMeta.specialization || null,
+              };
+
+              await supabase.from("profiles").insert([profileData]);
+
+              // Set user with available data
+              setUser({
+                id: session.user.id,
+                name: userMeta.full_name || "",
+                email: session.user.email,
+                role: userMeta.role || "patient",
+                isVerified: false,
+                doctorCode: userMeta.license_number || null,
+                avatarUrl: null,
+                specialization: userMeta.specialization || null,
+              });
+            } catch (createError) {
+              console.error("Error creating profile:", createError);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking initial auth state:", error);
+      } finally {
+        setIsLoading(false);
+        setAuthInitialized(true);
+      }
+    };
+
+    checkInitialAuthState();
+  }, []);
+
+  // Auth state listener - only set up after initial check
+  useEffect(() => {
+    if (!authInitialized) return;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change event:", event);
+
+      // Set loading to true only for sign-in/sign-up events
+      if (event === "SIGNED_IN" || event === "SIGNED_UP") {
+        setIsLoading(true);
+      }
+
+      if (session) {
+        console.log("Auth state changed, fetching user data");
+        const { data: userData, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user data:", error);
+
+          // Special handling for new signups - the profile might not exist yet on mobile
+          // due to race conditions, so we'll create it from session metadata
+          if (event === "SIGNED_UP" || event === "SIGNED_IN") {
+            const userMeta = session.user.user_metadata || {};
+
+            try {
+              // Create profile if it doesn't exist
+              const profileData = {
+                id: session.user.id,
+                email: session.user.email,
+                full_name: userMeta.full_name || "",
+                role: userMeta.role || "patient",
+                is_verified: false,
+                avatar_url: null,
+                doctor_code: userMeta.license_number || null,
+                specialization: userMeta.specialization || null,
+              };
+
+              await supabase.from("profiles").insert([profileData]);
+
+              // Set user with available data
+              setUser({
+                id: session.user.id,
+                name: userMeta.full_name || "",
+                email: session.user.email,
+                role: userMeta.role || "patient",
+                isVerified: false,
+                doctorCode: userMeta.license_number || null,
+                avatarUrl: null,
+                specialization: userMeta.specialization || null,
+              });
+            } catch (createError) {
+              console.error("Error creating profile:", createError);
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
+        } else {
+          console.log("User data fetched:", userData);
+          setUser({
+            id: userData.id,
+            name: userData.full_name,
+            email: userData.email,
+            role: userData.role,
+            isVerified: userData.is_verified,
+            doctorCode: userData.doctor_code,
+            avatarUrl: userData.avatar_url,
+            specialization: userData.specialization,
+          });
+        }
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+      }
+
+      // Only update loading state if we explicitly set it to true earlier
+      if (isLoading) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [authInitialized, isLoading]);
 
   const login = async (email, password) => {
     try {
-      await loginUser(email, password);
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Ensure proper navigation on mobile - force the redirect after login
+      const { data: userData } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
+
+      // Return role for navigation purposes
+      return userData?.role || "patient";
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -32,13 +205,131 @@ export function AuthProvider({ children }) {
         description: "Invalid email or password. Please try again.",
         variant: "destructive",
       });
+      setIsLoading(false); // Make sure to reset loading on error
+      throw error;
+    }
+  };
+
+  const signup = async (email, password, userData) => {
+    try {
+      setIsLoading(true);
+
+      // Attempt signup
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: userData.fullName,
+            role: userData.role,
+            ...(userData.role === "doctor" && {
+              license_number: userData.license,
+              specialization: userData.specialization,
+            }),
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      // Create profile entry explicitly
+      const profileData = {
+        id: data.user.id,
+        email: email,
+        full_name: userData.fullName,
+        role: userData.role,
+        is_verified: false,
+        avatar_url: null,
+        specialization: userData.specialization || null,
+        doctor_code: userData.role === "doctor" ? userData.license : null,
+      };
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert([profileData]);
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        // Continue even if profile creation fails, we'll handle it in auth state change
+      }
+
+      // If doctor, create verification record
+      if (userData.role === "doctor" && userData.license) {
+        // Generate a verification code for doctors (from first implementation)
+        const verificationCode = Math.floor(
+          100000 + Math.random() * 900000
+        ).toString();
+
+        // Set code expiry to 24 hours from now
+        const codeExpiry = new Date();
+        codeExpiry.setHours(codeExpiry.getHours() + 24);
+
+        const { error: verificationError } = await supabase
+          .from("doctor_verifications")
+          .insert([
+            {
+              doctor_id: data.user.id,
+              license_number: userData.license,
+              status: "pending",
+              verification_code: verificationCode,
+              code_expiry: codeExpiry.toISOString(),
+            },
+          ]);
+
+        if (verificationError) {
+          console.error(
+            "Doctor verification record creation error:",
+            verificationError
+          );
+          // Continue even if verification creation fails
+        } else {
+          // For development purposes, show the code in a toast
+          toast({
+            title: "Verification Code Generated",
+            description: `Your verification code is: ${verificationCode}`,
+          });
+        }
+      }
+
+      // Set user explicitly so we don't have to wait for auth state change
+      setUser({
+        id: data.user.id,
+        name: userData.fullName,
+        email: email,
+        role: userData.role,
+        isVerified: false,
+        doctorCode: userData.role === "doctor" ? userData.license : null,
+        avatarUrl: null,
+        specialization: userData.specialization || null,
+      });
+
+      toast({
+        title: "Account created successfully",
+        description:
+          userData.role === "doctor"
+            ? "Please complete your doctor verification process"
+            : "Welcome to Health Connect!",
+      });
+
+      return { user: data.user, role: userData.role };
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast({
+        title: "Error",
+        description:
+          error.message ||
+          "An error occurred during sign up. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await logoutUser();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       setUser(null);
       toast({
         title: "Signed out",
@@ -54,51 +345,70 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const handleDoctorCode = async (code) => {
+  const checkVerificationCode = async (verificationCode) => {
     try {
       if (!user || user.role !== "doctor") {
         throw new Error("Only doctors can verify codes");
       }
 
-      console.log("Verifying doctor code:", code, "for user:", user.id);
-      await verifyDoctorCode(code, user.id);
+      console.log(
+        "Checking verification code:",
+        verificationCode,
+        "for user:",
+        user.id
+      );
+
+      // Get the verification record
+      const { data, error } = await supabase
+        .from("doctor_verifications")
+        .select("*")
+        .eq("doctor_id", user.id)
+        .eq("verification_code", verificationCode)
+        .single();
+
+      if (error || !data) {
+        console.error("Verification error:", error);
+        throw new Error("Invalid verification code");
+      }
+
+      console.log("Verification data found:", data);
+
+      // Check if code is expired
+      if (data.code_expiry) {
+        const codeExpiry = new Date(data.code_expiry);
+        if (codeExpiry < new Date()) {
+          throw new Error("Verification code has expired");
+        }
+      }
+
+      // Update verification status
+      const { error: updateError } = await supabase
+        .from("doctor_verifications")
+        .update({
+          status: "verified",
+          verification_date: new Date().toISOString(),
+          verification_code: null,
+          code_expiry: null,
+        })
+        .eq("id", data.id);
+
+      if (updateError) throw updateError;
+
+      // Update user profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ is_verified: true })
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
 
       // Update local user state
       setUser((prev) => (prev ? { ...prev, isVerified: true } : null));
 
       toast({
         title: "Verification Successful",
-        description: "Your doctor account has been verified.",
-      });
-    } catch (error) {
-      console.error("Verification error:", error);
-      toast({
-        title: "Verification Failed",
         description:
-          error instanceof Error
-            ? error.message
-            : "Please check your code and try again.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const handleVerificationCode = async (verificationCode) => {
-    try {
-      if (!user || user.role !== "doctor") {
-        throw new Error("Only doctors can verify codes");
-      }
-
-      console.log("Checking verification code:", verificationCode);
-      await checkVerificationCode(verificationCode, user.id);
-
-      // Update local user state
-      setUser((prev) => (prev ? { ...prev, isVerified: true } : null));
-
-      toast({
-        title: "Verification Successful",
-        description: "Your doctor account has been verified.",
+          "Your doctor account has been verified. You can now access the doctor dashboard.",
       });
     } catch (error) {
       console.error("Verification error:", error);
@@ -112,21 +422,89 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const handleResetCode = async (userId) => {
+  const verifyDoctorCode = async (code) => {
+    try {
+      if (user?.role === "doctor") {
+        const { error } = await supabase
+          .from("doctor_verifications")
+          .update({
+            status: "verified",
+            verification_date: new Date().toISOString(),
+          })
+          .eq("doctor_id", user.id)
+          .eq("license_number", code);
+
+        if (error) throw error;
+
+        // Update user verification status
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ is_verified: true })
+          .eq("id", user.id);
+
+        if (profileError) throw profileError;
+
+        setUser((prev) => (prev ? { ...prev, isVerified: true } : null));
+
+        toast({
+          title: "Verification Successful",
+          description: "Your doctor account has been verified.",
+        });
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      toast({
+        title: "Verification Failed",
+        description: "Please check your code and try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const resetDoctorCode = async (email) => {
     try {
       if (!user || user.role !== "doctor") {
         throw new Error("Only doctors can reset verification codes");
       }
 
-      console.log("Resetting verification code for doctor:", user.id);
-      const verificationCode = await resetDoctorVerificationCode(userId);
+      // Generate a new code
+      const verificationCode = Math.floor(
+        100000 + Math.random() * 900000
+      ).toString();
+
+      // Set code expiry to 24 hours from now
+      const codeExpiry = new Date();
+      codeExpiry.setHours(codeExpiry.getHours() + 24);
+
+      console.log(
+        "Generated new verification code:",
+        verificationCode,
+        "for user:",
+        user.id
+      );
+
+      // Update doctor_verifications table with the new code
+      const { error, data } = await supabase
+        .from("doctor_verifications")
+        .update({
+          verification_code: verificationCode,
+          code_expiry: codeExpiry.toISOString(),
+        })
+        .eq("doctor_id", user.id)
+        .select();
+
+      if (error) {
+        console.error("Error updating verification code:", error);
+        throw error;
+      }
+
+      console.log("Verification code updated:", data);
 
       toast({
         title: "Verification Code Reset",
         description: `Your new verification code is: ${verificationCode}`,
       });
-
-      return verificationCode;
     } catch (error) {
       console.error("Reset code error:", error);
       toast({
@@ -139,13 +517,40 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const handleUpdateProfile = async (updates) => {
+  const updateUserProfile = async (updates) => {
     try {
       if (!user) {
         throw new Error("You must be logged in to update your profile");
       }
 
-      await updateUserProfile(user.id, updates);
+      // Transform the updates to match the database column names
+      const profileUpdates = {};
+
+      if (updates.name !== undefined) {
+        profileUpdates.full_name = updates.name;
+      }
+
+      if (updates.email !== undefined) {
+        profileUpdates.email = updates.email;
+      }
+
+      if (updates.avatarUrl !== undefined) {
+        profileUpdates.avatar_url = updates.avatarUrl;
+      }
+
+      if (updates.specialization !== undefined && user.role === "doctor") {
+        profileUpdates.specialization = updates.specialization;
+      }
+
+      // Update the profile in the database
+      const { error } = await supabase
+        .from("profiles")
+        .update(profileUpdates)
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      // Update local user state
       setUser((prev) => (prev ? { ...prev, ...updates } : null));
 
       toast({
@@ -166,32 +571,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const getDoctorVerificationStatus = async () => {
-    if (!user || user.role !== "doctor") {
-      return false;
-    }
-
-    try {
-      return await checkDoctorVerificationStatus(user.id);
-    } catch (error) {
-      console.error("Error checking verification status:", error);
-      return false;
-    }
-  };
-
-  const getVerificationDetails = async () => {
-    if (!user || user.role !== "doctor") {
-      return null;
-    }
-
-    try {
-      return await getDoctorVerificationDetails(user.id);
-    } catch (error) {
-      console.error("Error getting verification details:", error);
-      return null;
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -202,12 +581,11 @@ export function AuthProvider({ children }) {
         isVerifiedDoctor: user?.role === "doctor" && user?.isVerified,
         login,
         logout,
-        verifyDoctorCode: handleDoctorCode,
-        resetDoctorCode: handleResetCode,
-        checkVerificationCode: handleVerificationCode,
-        updateUserProfile: handleUpdateProfile,
-        getDoctorVerificationStatus,
-        getVerificationDetails,
+        signup, // Added from second implementation
+        verifyDoctorCode,
+        resetDoctorCode,
+        checkVerificationCode,
+        updateUserProfile,
       }}
     >
       {children}

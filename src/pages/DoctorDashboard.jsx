@@ -3,31 +3,66 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Users, Clock, Calendar, Activity, Search } from "lucide-react";
+import {
+  Users,
+  Clock,
+  Calendar,
+  Activity,
+  Shield,
+  Mail,
+  Unlock,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { StatsCard } from "@/components/dashboard/StatsCard";
+import { StatsCard } from "../components/dashboard/StatsCard";
 import { AppointmentList } from "@/components/dashboard/AppointmentList";
 import { PatientList } from "@/components/dashboard/PatientList";
-import { DoctorVerification } from "@/components/doctor/DoctorVerification";
-import { PerformanceMetrics } from "@/components/dashboard/PerformanceMetrics";
-import { UpcomingConsultations } from "@/components/dashboard/UpcomingConsultations";
-import { PatientSummary } from "@/components/dashboard/PatientSummary";
-import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const verificationCodeSchema = z.object({
+  verificationCode: z.string().length(6, {
+    message: "Verification code must be 6 digits",
+  }),
+});
 
 const DoctorDashboard = () => {
-  const { user, isDoctor, isVerifiedDoctor } = useAuth();
+  const {
+    user,
+    isDoctor,
+    isVerifiedDoctor,
+    checkVerificationCode,
+    resetDoctorCode,
+  } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [stats, setStats] = useState({
-    totalPatients: 0,
-    upcomingAppointments: 0,
-    todayConsultations: 0,
-    activeCases: 0,
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isRequestingCode, setIsRequestingCode] = useState(false);
+
+  const codeForm = useForm({
+    resolver: zodResolver(verificationCodeSchema),
+    defaultValues: {
+      verificationCode: "",
+    },
   });
 
   useEffect(() => {
@@ -35,134 +70,158 @@ const DoctorDashboard = () => {
       "Dashboard mount - User role:",
       user?.role,
       "isDoctor:",
-      isDoctor,
-      "isVerified:",
-      user?.isVerified
+      isDoctor
     );
+    if (!user) {
+      navigate("/signin");
+      return;
+    }
 
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-
-      if (!user) {
-        navigate("/signin");
-        return;
-      }
-
-      if (!isDoctor) {
-        navigate("/dashboard");
-        toast({
-          title: "Access Denied",
-          description: "Only doctors can access this dashboard.",
-          variant: "destructive",
-        });
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
+    if (!isDoctor) {
+      navigate("/dashboard");
+      toast({
+        title: "Access Denied",
+        description: "Only doctors can access this dashboard.",
+        variant: "destructive",
+      });
+    }
   }, [isDoctor, user, navigate, toast]);
 
-  useEffect(() => {
-    const fetchDashboardStats = async () => {
-      if (!user?.id) return;
-
-      try {
-        const { count: patientsCount, error: patientsError } = await supabase
-          .from("appointments")
-          .select("patient_id", { count: "exact", head: true })
-          .eq("doctor_id", user.id)
-          .distinctOn("patient_id");
-
-        if (patientsError) throw patientsError;
-
-        const today = new Date().toISOString().split("T")[0];
-        const { count: upcomingCount, error: upcomingError } = await supabase
-          .from("appointments")
-          .select("id", { count: "exact", head: true })
-          .eq("doctor_id", user.id)
-          .gte("appointment_date", today)
-          .not("status", "eq", "cancelled");
-
-        if (upcomingError) throw upcomingError;
-
-        const { count: todayCount, error: todayError } = await supabase
-          .from("appointments")
-          .select("id", { count: "exact", head: true })
-          .eq("doctor_id", user.id)
-          .eq("appointment_date", today)
-          .not("status", "eq", "cancelled");
-
-        if (todayError) throw todayError;
-
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
-
-        const { count: activeCasesCount, error: activeCasesError } =
-          await supabase
-            .from("appointments")
-            .select("patient_id", { count: "exact", head: true })
-            .eq("doctor_id", user.id)
-            .gte("appointment_date", thirtyDaysAgoStr)
-            .distinctOn("patient_id");
-
-        if (activeCasesError) throw activeCasesError;
-
-        setStats({
-          totalPatients: patientsCount || 0,
-          upcomingAppointments: upcomingCount || 0,
-          todayConsultations: todayCount || 0,
-          activeCases: activeCasesCount || 0,
-        });
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-        toast({
-          title: "Failed to load dashboard stats",
-          description: "There was an error loading your dashboard statistics",
-          variant: "destructive",
-        });
-      }
-    };
-
-    if (user?.id && isVerifiedDoctor) {
-      fetchDashboardStats();
-    }
-  }, [user?.id, isVerifiedDoctor, toast]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      toast({
-        title: "Searching",
-        description: `Searching for "${searchQuery}"`,
-      });
+  const handleVerificationCodeSubmit = async (values) => {
+    try {
+      setIsVerifying(true);
+      await checkVerificationCode(values.verificationCode);
+    } catch (error) {
+      console.error("Error verifying code:", error);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="col-span-12 flex items-center justify-center min-h-[50vh]">
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="h-8 w-48 bg-slate-200 rounded mb-4"></div>
-            <div className="h-4 w-64 bg-slate-200 rounded"></div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const handleResetCode = async () => {
+    try {
+      setIsRequestingCode(true);
+      if (user?.email) {
+        await resetDoctorCode(user.email);
+      }
+    } catch (error) {
+      console.error("Error resetting code:", error);
+    } finally {
+      setIsRequestingCode(false);
+    }
+  };
+
+  const stats = [
+    {
+      title: "Total Patients",
+      value: "2,420",
+      icon: Users,
+    },
+    {
+      title: "Upcoming Appointments",
+      value: "15",
+      icon: Clock,
+    },
+    {
+      title: "Today's Consultations",
+      value: "8",
+      icon: Calendar,
+    },
+    {
+      title: "Active Cases",
+      value: "48",
+      icon: Activity,
+    },
+  ];
 
   if (!isVerifiedDoctor) {
     return (
       <Layout>
         <div className="col-span-12">
-          <h1 className="text-3xl font-bold text-primary mb-6">
-            Doctor Dashboard
-          </h1>
-          <DoctorVerification
-            onVerificationSuccess={() => {
-              window.location.reload();
-            }}
-          />
+          <Card className="w-full max-w-md mx-auto mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-6 h-6 text-primary" />
+                Doctor Verification Required
+              </CardTitle>
+              <CardDescription>
+                Please enter your verification code to access the doctor
+                dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Form {...codeForm}>
+                <form
+                  onSubmit={codeForm.handleSubmit(handleVerificationCodeSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={codeForm.control}
+                    name="verificationCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Verification Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter 6-digit code"
+                            maxLength={6}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              );
+                              field.onChange(value);
+                            }}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter the 6-digit code provided during signup
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex flex-col space-y-2">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isVerifying}
+                    >
+                      {isVerifying ? (
+                        <span className="flex items-center gap-2">
+                          <Unlock className="animate-pulse h-4 w-4" />
+                          Verifying...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Unlock className="h-4 w-4" />
+                          Verify Code
+                        </span>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleResetCode}
+                      disabled={isRequestingCode}
+                    >
+                      {isRequestingCode ? "Requesting..." : "Request New Code"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+            <CardFooter className="flex justify-center border-t pt-4">
+              <p className="text-xs text-muted-foreground text-center">
+                If you've lost your verification code, you can request a new
+                one.
+              </p>
+            </CardFooter>
+          </Card>
         </div>
       </Layout>
     );
@@ -194,90 +253,43 @@ const DoctorDashboard = () => {
   return (
     <Layout>
       <div className="col-span-12">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold text-primary">
-                Doctor Dashboard
-              </h1>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                Verified Doctor
-              </span>
-            </div>
-            <p className="text-muted-foreground">
-              Welcome back, Dr. {user?.name}
-            </p>
+        <div className="mb-8">
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-primary">
+              Doctor Dashboard
+            </h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+              Verified Doctor
+            </span>
           </div>
-
-          <form onSubmit={handleSearch} className="flex w-full md:w-auto gap-2">
-            <div className="relative flex-1 md:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search patients..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button type="submit">Search</Button>
-          </form>
+          <p className="text-muted-foreground">
+            Welcome back, Dr. {user?.name}
+          </p>
         </div>
 
-        <Tabs
-          defaultValue={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-8"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {stats.map((stat) => (
+            <StatsCard
+              key={stat.title}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+            />
+          ))}
+        </div>
+
+        <Tabs defaultValue="appointments" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="patients">Patients</TabsTrigger>
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="patients">Patients</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="overview" className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {dashboardStats.map((stat) => (
-                <StatsCard
-                  key={stat.title}
-                  title={stat.title}
-                  value={stat.value}
-                  icon={stat.icon}
-                />
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <PerformanceMetrics />
-              </div>
-              <div>
-                <PatientSummary />
-              </div>
-            </div>
-
-            <UpcomingConsultations />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PatientList />
-              <AppointmentList />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="patients">
-            <PatientList />
-          </TabsContent>
 
           <TabsContent value="appointments">
             <AppointmentList />
           </TabsContent>
 
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PerformanceMetrics />
-              <PatientSummary />
-            </div>
+          <TabsContent value="patients">
+            <PatientList />
           </TabsContent>
         </Tabs>
       </div>

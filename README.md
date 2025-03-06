@@ -4,16 +4,15 @@
 
 **Health Connect** is a comprehensive web application designed to facilitate health and wellness management. By integrating telehealth services, digital health resources, and a robust health information hub, Health Connect empowers users to take charge of their health while connecting seamlessly with healthcare professionals.
 
-**Live Demo**: [https://health-connect-pi.vercel.app/](https://health-connect-pi.vercel.app/)
+## Project Info
+
+**Live Demo**: [(https://health-connect-pi.vercel.app/)]
 
 ## Table of Contents
 
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running the Application](#running-the-application)
 - [Deployment](#deployment)
 - [Custom Domain](#custom-domain)
 - [Contributing](#contributing)
@@ -92,44 +91,23 @@
 - **Remote Patient Monitoring**: Track health metrics via wearables.
 - **Predictive Analytics**: Utilize IoT data for advanced analytics.
 
----
-
 ## Technologies Used
 
 This project utilizes the following technologies:
 
-- **Frontend**:
-
-  - [Vite](https://vitejs.dev/): Build tool and development server.
-  - [React](https://reactjs.org/): Library for building user interfaces.
-  - [shadcn-ui](https://ui.shadcn.com/): UI component library for React.
-  - [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework for styling.
-  - [Framer Motion](https://www.framer.com/motion/): Animation library for React.
-
-- **Backend**:
-
-  - [Supabase](https://supabase.io/): Open-source Firebase alternative for database and authentication.
-  - [Node.js](https://nodejs.org/): JavaScript runtime for backend development.
-  - [Express.js](https://expressjs.com/): Web framework for Node.js.
-
-- **Other Tools**:
-  - [Git](https://git-scm.com/): Version control system.
-  - [Vercel](https://vercel.com/): Deployment platform for frontend and serverless functions.
-  - [PostgreSQL](https://www.postgresql.org/): Relational database for storing application data.
-
----
+- **Vite**: Build tool and development server.
+- **JavaScript**: The language of the web.
+- **React**: Library for building user interfaces.
+- **shadcn-ui**: UI component library for React.
+- **Tailwind CSS**: Utility-first CSS framework for styling.
 
 ## Getting Started
 
+To set up the project locally, follow these instructions:
+
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v16 or higher recommended)
-- [npm](https://www.npmjs.com/) (comes with Node.js)
-- [Git](https://git-scm.com/) (for version control)
-
-It is recommended to use [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) for managing Node.js versions.
+- Ensure you have [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed. It is recommended to use [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) for managing Node.js versions.
 
 ### Installation
 
