@@ -14,6 +14,8 @@
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Running the Application](#running-the-application)
+- [Deployment](#deployment)
+- [Custom Domain](#custom-domain)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
@@ -113,6 +115,7 @@ This project utilizes the following technologies:
 - **Other Tools**:
   - [Git](https://git-scm.com/): Version control system.
   - [Vercel](https://vercel.com/): Deployment platform for frontend and serverless functions.
+  - [PostgreSQL](https://www.postgresql.org/): Relational database for storing application data.
 
 ---
 
@@ -165,7 +168,7 @@ It is recommended to use [nvm](https://github.com/nvm-sh/nvm#installing-and-upda
    ```
 
 2. **Open the Application**:
-   - Visit `http://localhost:5173` in your browser to view the application.
+   - Visit `http://localhost:3000` in your browser to view the application.
 
 ---
 
@@ -195,6 +198,23 @@ It is recommended to use [nvm](https://github.com/nvm-sh/nvm#installing-and-upda
    - Navigate to the project settings.
    - Add the environment variables (`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`).
 
+---
+
+## Custom Domain
+
+To use a custom domain with your Vercel deployment:
+
+1. **Add a Custom Domain**:
+
+   - Go to your Vercel dashboard.
+   - Navigate to the project settings.
+   - Add your custom domain under the "Domains" section.
+
+2. **Update DNS Records**:
+   - Update your DNS records to point to Vercel's servers (instructions provided in the Vercel dashboard).
+
+---
+
 ## Contributing
 
 We welcome contributions! Please follow these steps to contribute:
@@ -206,7 +226,7 @@ We welcome contributions! Please follow these steps to contribute:
 2. **Clone Your Fork**:
 
    ```sh
-   git clone https://github.com/fadigatardzenyuy/Health_Connect.git
+   git clone https://github.com/your-username/Health_Connect.git
    ```
 
 3. **Create a New Branch**:
@@ -238,4 +258,7 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## Acknowledgments
 
-- **INOVATEWITHSEED**
+- **Vercel** for providing an excellent deployment platform.
+- **Supabase** for backend services.
+- **shadcn-ui** and **Tailwind CSS** for UI components and styling.
+- **Framer Motion** for animations.
