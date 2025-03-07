@@ -2,11 +2,20 @@ import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Heart, MessageSquare, Share2, Eye, Clock } from "lucide-react";
+import {
+  Shield,
+  Heart,
+  MessageSquare,
+  Share2,
+  Eye,
+  Clock,
+  SendHorizonal,
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
+import { Separator } from "@/components/ui/separator";
 
 export function PostCard({ post }) {
   const { user } = useAuth();
@@ -19,7 +28,10 @@ export function PostCard({ post }) {
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [timeAgo, setTimeAgo] = useState("");
+  const [comments, setComments] = useState([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
 
+  // Format time ago
   useEffect(() => {
     try {
       setTimeAgo(
@@ -31,12 +43,14 @@ export function PostCard({ post }) {
     }
   }, [post.created_at]);
 
+  // Check if user has liked this post
   useEffect(() => {
     if (user) {
       checkIfLiked();
     }
   }, [user]);
 
+  // Increment view count when post is rendered
   useEffect(() => {
     incrementViewCount();
   }, []);
@@ -61,6 +75,7 @@ export function PostCard({ post }) {
 
   const incrementViewCount = async () => {
     try {
+      // Only increment if user is logged in (to prevent spam)
       if (user) {
         const { error } = await supabase
           .from("posts")
@@ -88,12 +103,19 @@ export function PostCard({ post }) {
 
     try {
       if (!liked) {
+        // Add a like
         const { error } = await supabase.from("post_likes").insert({
           post_id: post.id,
           user_id: user.id,
         });
 
         if (error) throw error;
+
+        // Update the post likes count
+        await supabase
+          .from("posts")
+          .update({ likes_count: likesCount + 1 })
+          .eq("id", post.id);
 
         setLiked(true);
         setLikesCount((prev) => prev + 1);
@@ -103,12 +125,19 @@ export function PostCard({ post }) {
           description: "You've liked this post",
         });
       } else {
+        // Remove a like
         const { error } = await supabase
           .from("post_likes")
           .delete()
           .match({ post_id: post.id, user_id: user.id });
 
         if (error) throw error;
+
+        // Update the post likes count
+        await supabase
+          .from("posts")
+          .update({ likes_count: Math.max(0, likesCount - 1) })
+          .eq("id", post.id);
 
         setLiked(false);
         setLikesCount((prev) => Math.max(0, prev - 1));
@@ -134,22 +163,80 @@ export function PostCard({ post }) {
     }
 
     setShowCommentInput(!showCommentInput);
+
+    if (!showCommentInput && commentsCount > 0) {
+      fetchComments();
+    }
+  };
+
+  const fetchComments = async () => {
+    try {
+      setIsLoadingComments(true);
+
+      const { data, error } = await supabase
+        .from("comments")
+        .select(
+          `
+          id,
+          content,
+          created_at,
+          user_id,
+          profiles!user_id(full_name, avatar_url)
+        `
+        )
+        .eq("post_id", post.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+
+      setComments(data || []);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load comments",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingComments(false);
+    }
   };
 
   const submitComment = async () => {
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || !user) return;
 
     try {
-      const { error } = await supabase.from("post_comments").insert({
+      // Add the comment
+      const { error: commentError } = await supabase.from("comments").insert({
         post_id: post.id,
         user_id: user.id,
         content: commentText.trim(),
       });
 
-      if (error) throw error;
+      if (commentError) throw commentError;
 
+      // Update the post comments count
+      const { error: updateError } = await supabase
+        .from("posts")
+        .update({ comments_count: commentsCount + 1 })
+        .eq("id", post.id);
+
+      if (updateError) throw updateError;
+
+      // Add the new comment to the list
+      const newComment = {
+        id: Date.now().toString(), // Temporary ID until we refresh
+        content: commentText.trim(),
+        created_at: new Date().toISOString(),
+        profiles: {
+          full_name: user.name || "User",
+          avatar_url: user.avatarUrl || "",
+        },
+      };
+
+      setComments((prev) => [newComment, ...prev]);
       setCommentText("");
-      setShowCommentInput(false);
       setCommentsCount((prev) => prev + 1);
 
       toast({
@@ -168,6 +255,7 @@ export function PostCard({ post }) {
 
   const handleShare = async () => {
     try {
+      // Increment share count
       const { error } = await supabase
         .from("posts")
         .update({ repost_count: (post.repost_count || 0) + 1 })
@@ -177,6 +265,7 @@ export function PostCard({ post }) {
 
       setSharesCount((prev) => prev + 1);
 
+      // Copy post link to clipboard
       const postUrl = `${window.location.origin}/post/${post.id}`;
       await navigator.clipboard.writeText(postUrl);
 
@@ -198,6 +287,14 @@ export function PostCard({ post }) {
     return post.author?.role === "doctor"
       ? "bg-blue-100 text-blue-800"
       : "bg-green-100 text-green-800";
+  };
+
+  const formatCommentTime = (timestamp) => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch (error) {
+      return "recently";
+    }
   };
 
   return (
@@ -294,27 +391,60 @@ export function PostCard({ post }) {
 
       {showCommentInput && (
         <div className="px-4 pb-4 bg-gray-50 border-t">
-          <div className="flex space-x-2 pt-3">
+          {comments.length > 0 && (
+            <div className="pt-3 pb-2">
+              <h4 className="text-sm font-medium mb-2">Comments</h4>
+              <div className="space-y-3">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-2">
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={comment.profiles?.avatar_url} />
+                      <AvatarFallback className="text-xs">
+                        {comment.profiles?.full_name?.charAt(0) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 bg-white rounded-lg p-2 text-sm">
+                      <div className="flex justify-between items-start">
+                        <span className="font-medium text-xs">
+                          {comment.profiles?.full_name || "User"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatCommentTime(comment.created_at)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-gray-800">{comment.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Separator className="my-3" />
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 pt-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user?.avatarUrl} />
               <AvatarFallback className="bg-primary/5 text-primary">
                 {user?.name?.charAt(0) || "?"}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 flex items-center gap-2">
               <input
                 type="text"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                className="w-full rounded-full border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
                 placeholder="Write a comment..."
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && submitComment()}
               />
-              <div className="flex justify-end">
-                <Button size="sm" onClick={submitComment} className="text-xs">
-                  comment
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                className="rounded-full w-8 h-8 p-0 flex items-center justify-center"
+                onClick={submitComment}
+                disabled={!commentText.trim()}
+              >
+                <SendHorizonal className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>

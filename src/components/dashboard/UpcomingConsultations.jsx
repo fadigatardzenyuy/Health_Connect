@@ -43,7 +43,7 @@ export function UpcomingConsultations() {
             appointment_date,
             appointment_time,
             status,
-            patient:patient_id(full_name)
+            patient:profiles!patient_id(full_name)
           `
           )
           .eq("doctor_id", user.id)
@@ -52,10 +52,10 @@ export function UpcomingConsultations() {
 
         if (error) throw error;
 
-        // Transform data to add the type property (in a real app, this would be a column in the DB)
         const formattedConsultations = (data || []).map((consult) => ({
           ...consult,
           type: Math.random() > 0.5 ? "video" : "audio",
+          patient: consult.patient,
         }));
 
         setConsultations(formattedConsultations);
@@ -88,7 +88,7 @@ export function UpcomingConsultations() {
   };
 
   return (
-    <Card>
+    <Card className="border border-gray-200 hover:border-gray-300 transition-colors">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle>Today's Consultations</CardTitle>
         <Button
@@ -102,11 +102,10 @@ export function UpcomingConsultations() {
       <CardContent>
         <div className="space-y-4">
           {isLoading ? (
-            // Loading state
             Array(3)
               .fill(0)
               .map((_, i) => (
-                <div key={i} className="p-4 border rounded-lg">
+                <div key={i} className="p-4 border rounded-lg bg-card">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <Skeleton className="w-10 h-10 rounded-full" />

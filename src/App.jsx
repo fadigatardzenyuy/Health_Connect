@@ -26,6 +26,7 @@ import AiChatPage from "./pages/AiChatPage";
 import SearchPage from "./pages/SearchPage";
 import NotificationPage from "./pages/Notification";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import AppointmentDetails from "./pages/AppointmentDetails";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -62,11 +63,11 @@ const routes = [
     element: <Messages />,
   },
   {
-    path: "/video-consultation",
+    path: "/video-consultation/:appointmentId?",
     element: <VideoConsultation />,
   },
   {
-    path: "/audio-consultation",
+    path: "/audio-consultation/:appointmentId?",
     element: <AudioConsultation />,
   },
   {
@@ -97,6 +98,11 @@ const routes = [
     path: "/notifications",
     element: <NotificationPage />,
   },
+  {
+    path: "/appointment-details/:id",
+    element: <AppointmentDetails />,
+  },
+  // Add more routes as needed...
 ];
 
 // Create a browser router

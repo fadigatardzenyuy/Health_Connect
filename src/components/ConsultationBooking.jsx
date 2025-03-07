@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
+import { VideoPreview } from "./consultation/VideoPreview";
 import { ConsultationForm } from "./consultation/ConsultationForm";
 import { TimeSlotPicker } from "./consultation/TimeSlotPicker";
 import { PrescriptionForm } from "./consultation/PrescriptionForm";
@@ -12,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DoctorSearch } from "./DoctorSearch";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
-import { VideoPreview } from "./consultation/VideoPreview";
 
 export function ConsultationBooking() {
   const [selectedDate, setSelectedDate] = useState();
@@ -34,14 +34,6 @@ export function ConsultationBooking() {
     }
 
     try {
-      console.log("Attempting to book appointment with data:", {
-        patient_id: user.id,
-        doctor_id: selectedDoctor,
-        appointment_date: selectedDate,
-        appointment_time: selectedTime,
-        ...data,
-      });
-
       const { error } = await supabase.from("appointments").insert({
         patient_id: user.id,
         doctor_id: selectedDoctor,
@@ -49,19 +41,17 @@ export function ConsultationBooking() {
         medical_history: data.medicalHistory,
         allergies: data.allergies || null,
         current_medications: data.currentMedications || null,
-        appointment_date: selectedDate.toISOString(),
+        appointment_date: selectedDate.toISOString().split("T")[0],
         appointment_time: selectedTime,
         status: "pending",
       });
 
-      if (error) {
-        console.error("Booking error:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
-        title: "Consultation Booked",
-        description: "Your consultation has been scheduled successfully.",
+        title: "Consultation Requested",
+        description:
+          "Your consultation request has been sent to the doctor for approval.",
       });
 
       navigate("/dashboard");

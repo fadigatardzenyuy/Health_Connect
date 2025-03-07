@@ -67,14 +67,19 @@ const DoctorDashboard = () => {
       if (!user?.id) return;
 
       try {
-        // Fetch total unique patients
-        const { count: patientsCount, error: patientsError } = await supabase
+        // Fetch total unique patients (without using distinctOn)
+        let { data: patientsData, error: patientsError } = await supabase
           .from("appointments")
-          .select("patient_id", { count: "exact", head: true })
-          .eq("doctor_id", user.id)
-          .distinctOn("patient_id");
+          .select("patient_id")
+          .eq("doctor_id", user.id);
 
         if (patientsError) throw patientsError;
+
+        // Get unique patient IDs
+        const uniquePatientIds = [
+          ...new Set(patientsData?.map((record) => record.patient_id) || []),
+        ];
+        const patientsCount = uniquePatientIds.length;
 
         // Fetch upcoming appointments
         const today = new Date().toISOString().split("T")[0];
@@ -102,15 +107,20 @@ const DoctorDashboard = () => {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
 
-        const { count: activeCasesCount, error: activeCasesError } =
-          await supabase
-            .from("appointments")
-            .select("patient_id", { count: "exact", head: true })
-            .eq("doctor_id", user.id)
-            .gte("appointment_date", thirtyDaysAgoStr)
-            .distinctOn("patient_id");
+        // Get active cases without using distinctOn
+        let { data: activeCasesData, error: activeCasesError } = await supabase
+          .from("appointments")
+          .select("patient_id")
+          .eq("doctor_id", user.id)
+          .gte("appointment_date", thirtyDaysAgoStr);
 
         if (activeCasesError) throw activeCasesError;
+
+        // Get unique active patient IDs
+        const uniqueActivePatientIds = [
+          ...new Set(activeCasesData?.map((record) => record.patient_id) || []),
+        ];
+        const activeCasesCount = uniqueActivePatientIds.length;
 
         setStats({
           totalPatients: patientsCount || 0,
