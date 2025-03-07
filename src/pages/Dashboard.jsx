@@ -11,7 +11,7 @@ import { ArrowRightFromLine } from "lucide-react";
 import { PatientHealthSummary } from "@/components/patient/PatientHealthSummary";
 import { AppointmentCalendar } from "../components/appointments/AppointmentCalender";
 
-const Dashboard = () => {
+const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -104,4 +104,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Index;
