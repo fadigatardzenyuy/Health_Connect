@@ -13,13 +13,6 @@ import {
   Tooltip,
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Search, UserRound, Download, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -66,6 +59,7 @@ export function PatientSummary() {
       if (!user?.id) return;
 
       try {
+        // Simulate API call with real endpoint
         setTimeout(() => {
           setData((prev) => ({ ...prev, loading: false }));
         }, 1500);

@@ -26,9 +26,9 @@ export function MedicalRecordsList({ patientId }) {
           .from("medical_records")
           .select(
             `
-              *,
-              doctor:doctor_id(full_name)
-            `
+            *,
+            doctor:doctor_id(full_name)
+          `
           )
           .eq("patient_id", patientId)
           .order("created_at", { ascending: false });

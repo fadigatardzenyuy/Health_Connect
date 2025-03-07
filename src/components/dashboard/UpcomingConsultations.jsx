@@ -52,6 +52,7 @@ export function UpcomingConsultations() {
 
         if (error) throw error;
 
+        // Transform data to add the type property (in a real app, this would be a column in the DB)
         const formattedConsultations = (data || []).map((consult) => ({
           ...consult,
           type: Math.random() > 0.5 ? "video" : "audio",
@@ -101,6 +102,7 @@ export function UpcomingConsultations() {
       <CardContent>
         <div className="space-y-4">
           {isLoading ? (
+            // Loading state
             Array(3)
               .fill(0)
               .map((_, i) => (

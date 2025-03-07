@@ -26,6 +26,9 @@ export function PatientDetail({ patientId, onClose }) {
     if (!patientId) return;
 
     const fetchPatientData = async () => {
+      // In a real application, this would be an API call to your backend
+      // Example: const { data, error } = await supabase.from('patients').select('*').eq('id', patientId).single();
+
       // Simulate API delay
       setTimeout(() => {
         // Mock data for demonstration
