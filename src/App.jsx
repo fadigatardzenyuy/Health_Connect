@@ -7,7 +7,7 @@ import {
   RouterProvider,
   Navigate,
 } from "react-router-dom";
-import Index from "./pages/Index";
+// import Index from "./pages/Index";
 import VideoConsultation from "./pages/VideoConsultation";
 import AudioConsultation from "./pages/AudioConsultation";
 import ConsultationBooking from "./pages/ConsultationBooking";
@@ -27,6 +27,7 @@ import SearchPage from "./pages/SearchPage";
 import NotificationPage from "./pages/Notification";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import AppointmentDetails from "./pages/AppointmentDetails";
+import Dashboard from "./pages/Dashboard";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -39,7 +40,7 @@ const routes = [
   },
   {
     path: "/dashboard",
-    element: <Index />,
+    element: <Dashboard />,
   },
 
   {

@@ -129,9 +129,9 @@ export function PatientSummary() {
               <TabsTrigger value="overview" className="text-xs sm:text-sm">
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="detailed" className="text-xs sm:text-sm">
+              {/* <TabsTrigger value="detailed" className="text-xs sm:text-sm">
                 Detailed View
-              </TabsTrigger>
+              </TabsTrigger> */}
               <TabsTrigger value="trends" className="text-xs sm:text-sm">
                 Trends
               </TabsTrigger>
@@ -147,7 +147,7 @@ export function PatientSummary() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={filterType} onValueChange={setFilterType}>
+              {/* <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="h-9 w-[100px] sm:w-[130px]">
                   <SelectValue placeholder="Filter by" />
                 </SelectTrigger>
@@ -157,7 +157,7 @@ export function PatientSummary() {
                   <SelectItem value="recurring">Recurring</SelectItem>
                   <SelectItem value="critical">Critical Care</SelectItem>
                 </SelectContent>
-              </Select>
+              </Select> */}
             </div>
           </div>
 

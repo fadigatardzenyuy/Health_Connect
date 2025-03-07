@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRightFromLine } from "lucide-react";
-import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
+
 import { PatientHealthSummary } from "@/components/patient/PatientHealthSummary";
+import { AppointmentCalendar } from "../components/appointments/AppointmentCalender";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -78,6 +79,7 @@ const Dashboard = () => {
       </div>
       <div className="col-span-12 lg:col-span-6 xl:col-span-7 space-y-6">
         {DoctorDashboardSwitch}
+        <MainFeed />
 
         {/* Calendar for appointment management */}
         <div className="mb-6">
@@ -89,8 +91,6 @@ const Dashboard = () => {
             }}
           />
         </div>
-
-        <MainFeed />
       </div>
       <div className="col-span-12 lg:col-span-3 space-y-6">
         {/* Show different content based on user role */}
