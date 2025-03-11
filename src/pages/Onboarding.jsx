@@ -169,9 +169,9 @@ const Onboarding = () => {
 
         <motion.h1 className="text-4xl font-bold text-white leading-tight">
           WAHPITA
-          <motion.span className="block bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+          {/* <motion.span className="block bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
             Connect
-          </motion.span>
+          </motion.span> */}
         </motion.h1>
 
         <motion.p
@@ -384,9 +384,9 @@ const Onboarding = () => {
 
                 <motion.h1 className="text-5xl sm:text-6xl font-bold text-white leading-tight">
                   WAHPITA
-                  <motion.span className="block bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                  {/* <motion.span className="block bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                     Connect
-                  </motion.span>
+                  </motion.span> */}
                 </motion.h1>
 
                 <motion.p

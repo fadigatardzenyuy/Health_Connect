@@ -28,6 +28,7 @@ import NotificationPage from "./pages/Notification";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import AppointmentDetails from "./pages/AppointmentDetails";
 import Dashboard from "./pages/Dashboard";
+import Welcome from "./pages/Welcome";
 
 // Create the query client for react-query
 const queryClient = new QueryClient();
@@ -37,15 +38,6 @@ const routes = [
   {
     path: "/",
     element: <Navigate to="/onboarding" replace />,
-  },
-  {
-    path: "/dashboard",
-    element: <Dashboard />,
-  },
-
-  {
-    path: "/aiDoc",
-    element: <AiChatPage />,
   },
   {
     path: "/onboarding",
@@ -60,6 +52,26 @@ const routes = [
     element: <SignUp />,
   },
   {
+    path: "/welcome",
+    element: <Welcome />,
+  },
+  {
+    path: "/dashboard",
+    element: <Dashboard />,
+  },
+  {
+    path: "/doctor-dashboard",
+    element: <DoctorDashboard />,
+  },
+  {
+    path: "/consultation-booking",
+    element: <ConsultationBooking />,
+  },
+  {
+    path: "/aiDoc",
+    element: <AiChatPage />,
+  },
+  {
     path: "/messages",
     element: <Messages />,
   },
@@ -70,14 +82,6 @@ const routes = [
   {
     path: "/audio-consultation/:appointmentId?",
     element: <AudioConsultation />,
-  },
-  {
-    path: "/consultation-booking",
-    element: <ConsultationBooking />,
-  },
-  {
-    path: "/doctor-dashboard",
-    element: <DoctorDashboard />,
   },
   {
     path: "/prescriptions",

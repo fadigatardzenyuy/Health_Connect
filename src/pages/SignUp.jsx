@@ -231,7 +231,7 @@ const SignUp = () => {
           title: "Account created successfully",
           description: "Welcome to Health Connect!",
         });
-        navigate("/dashboard");
+        navigate("/welcome");
       }
     } catch (error) {
       toast({

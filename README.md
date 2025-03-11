@@ -1,6 +1,3 @@
-Here’s the **README.md** file transformed into proper Markdown syntax for use in Visual Studio Code (VSCode). Simply copy and paste this into a new file named `README.md` in your project.
-
-````markdown
 # Health Connect
 
 ## Overview
@@ -19,7 +16,6 @@ Here’s the **README.md** file transformed into proper Markdown syntax for use 
 - [Technologies Used](#technologies-used)
 - [Getting Started](#getting-started)
 - [Deployment](#deployment)
-- [Custom Domain](#custom-domain)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
@@ -122,6 +118,7 @@ To set up the project locally, follow these instructions:
    ```sh
    git clone https://github.com/fadigatardzenyuy/Health_Connect.git
    ```
+
 ````
 
 2. **Navigate to the Project Directory**:
@@ -153,7 +150,7 @@ To set up the project locally, follow these instructions:
    ```
 
 2. **Open the Application**:
-   - Visit `http://localhost:3000` in your browser to view the application.
+   - Visit `http://localhost:5173` in your browser to view the application.
 
 ---
 
@@ -185,20 +182,6 @@ To set up the project locally, follow these instructions:
 
 ---
 
-## Custom Domain
-
-To use a custom domain with your Vercel deployment:
-
-1. **Add a Custom Domain**:
-
-   - Go to your Vercel dashboard.
-   - Navigate to the project settings.
-   - Add your custom domain under the "Domains" section.
-
-2. **Update DNS Records**:
-   - Update your DNS records to point to Vercel's servers (instructions provided in the Vercel dashboard).
-
----
 
 ## Contributing
 
@@ -247,7 +230,6 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## Acknowledgments
 
-- **Vercel** for providing an excellent deployment platform.
-- **Supabase** for backend services.
-- **shadcn-ui** and **Tailwind CSS** for UI components and styling.
-- **Framer Motion** for animations.
+- **SEED** for providing an excellent assitance.
+
+````

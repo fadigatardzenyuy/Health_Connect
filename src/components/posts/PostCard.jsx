@@ -10,6 +10,8 @@ import {
   Eye,
   Clock,
   SendHorizonal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -30,6 +32,15 @@ export function PostCard({ post }) {
   const [timeAgo, setTimeAgo] = useState("");
   const [comments, setComments] = useState([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const MAX_WORDS = 15;
+
+  const truncateText = (text) => {
+    const words = text.split(" ");
+    if (words.length <= MAX_WORDS) return text;
+    return words.slice(0, MAX_WORDS).join(" ") + "...";
+  };
 
   // Format time ago
   useEffect(() => {
@@ -176,13 +187,11 @@ export function PostCard({ post }) {
       const { data, error } = await supabase
         .from("comments")
         .select(
-          `
-          id,
+          `id,
           content,
           created_at,
           user_id,
-          profiles!user_id(full_name, avatar_url)
-        `
+          profiles!user_id(full_name, avatar_url)`
         )
         .eq("post_id", post.id)
         .order("created_at", { ascending: false })
@@ -283,6 +292,11 @@ export function PostCard({ post }) {
     }
   };
 
+  // Determine if content should be truncated
+  const shouldTruncate = post.content.split(" ").length > MAX_WORDS;
+  const displayContent = expanded ? post.content : truncateText(post.content);
+
+  // Determine role badge color
   const getRoleBadgeClass = () => {
     return post.author?.role === "doctor"
       ? "bg-blue-100 text-blue-800"
@@ -335,8 +349,26 @@ export function PostCard({ post }) {
 
             <div className="mt-3">
               <p className="text-gray-800 whitespace-pre-line">
-                {post.content}
+                {displayContent}
               </p>
+              {shouldTruncate && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 h-6 text-primary hover:text-primary/80 p-0"
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  {expanded ? (
+                    <span className="flex items-center">
+                      Show less <ChevronUp className="ml-1 h-3 w-3" />
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      Read more <ChevronDown className="ml-1 h-3 w-3" />
+                    </span>
+                  )}
+                </Button>
+              )}
               {post.image_url && (
                 <div className="mt-3 rounded-lg overflow-hidden">
                   <img

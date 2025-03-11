@@ -1,4 +1,4 @@
-import { User, Calendar, Clock, ArrowRight } from "lucide-react";
+import { User, Calendar, Clock, ArrowRight, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,11 @@ import { PatientDetail } from "./PatientDetail";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export function AppointmentList() {
   const { toast } = useToast();
@@ -22,6 +27,10 @@ export function AppointmentList() {
   const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
+
+  const hasManyAppointments = appointments.length > 3;
+  const initialDisplayCount = 3;
 
   useEffect(() => {
     const handleResize = () => {
@@ -42,15 +51,12 @@ export function AppointmentList() {
         let query = supabase
           .from("appointments")
           .select(
-            `
-            *,
+            `*,
             doctor:profiles!doctor_id(full_name, specialization),
-            patient:profiles!patient_id(full_name)
-          `
+            patient:profiles!patient_id(full_name)`
           )
           .order("appointment_date", { ascending: true })
-          .order("appointment_time", { ascending: true })
-          .limit(5);
+          .order("appointment_time", { ascending: true });
 
         if (user?.role === "doctor") {
           query = query.eq("doctor_id", user.id);
@@ -108,6 +114,125 @@ export function AppointmentList() {
     }
   };
 
+  const getPaymentStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "unpaid":
+        return "bg-red-100 text-red-800";
+      case "refunded":
+        return "bg-amber-100 text-amber-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const renderAppointment = (apt) => (
+    <div
+      key={apt.id}
+      className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/10 transition-colors gap-4"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <User className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="font-medium truncate max-w-[150px] md:max-w-xs">
+              {user?.role === "doctor"
+                ? apt.patient?.full_name
+                : apt.doctor?.full_name}
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              <Badge className={getStatusColor(apt.status)}>{apt.status}</Badge>
+              {apt.payment_status && (
+                <Badge className={getPaymentStatusColor(apt.payment_status)}>
+                  {apt.payment_status}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground truncate max-w-[200px] md:max-w-xs">
+            {apt.doctor?.specialization || "Consultation"}
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-col md:flex-row md:items-center gap-3">
+        <div className="flex flex-col md:items-end text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            <span>{format(new Date(apt.appointment_date), "MMM d, yyyy")}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            <span>{apt.appointment_time}</span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {user?.role === "doctor" &&
+            (isMobile ? (
+              <Sheet
+                open={isDetailOpen && selectedPatientId === apt.patient_id}
+                onOpenChange={(open) => {
+                  if (!open) handleCloseDetail();
+                  else setIsDetailOpen(open);
+                }}
+              >
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleViewPatient(apt.patient_id)}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-md p-0">
+                  <PatientDetail
+                    patientId={selectedPatientId || undefined}
+                    onClose={handleCloseDetail}
+                  />
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <Dialog
+                open={isDetailOpen && selectedPatientId === apt.patient_id}
+                onOpenChange={(open) => {
+                  if (!open) handleCloseDetail();
+                  else setIsDetailOpen(open);
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleViewPatient(apt.patient_id)}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl p-0">
+                  <PatientDetail
+                    patientId={selectedPatientId || undefined}
+                    onClose={handleCloseDetail}
+                  />
+                </DialogContent>
+              </Dialog>
+            ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleViewDetails(apt.id)}
+          >
+            View Details
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <Card className="border border-gray-200 hover:border-gray-300 transition-colors">
@@ -159,115 +284,45 @@ export function AppointmentList() {
               No appointments scheduled
             </p>
           ) : (
-            appointments.map((apt) => (
-              <div
-                key={apt.id}
-                className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/10 transition-colors gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-medium truncate max-w-[150px] md:max-w-xs">
-                        {user?.role === "doctor"
-                          ? apt.patient?.full_name
-                          : apt.doctor?.full_name}
-                      </h4>
-                      <Badge className={getStatusColor(apt.status)}>
-                        {apt.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate max-w-[200px] md:max-w-xs">
-                      {apt.doctor?.specialization || "Consultation"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col md:flex-row md:items-center gap-3">
-                  <div className="flex flex-col md:items-end text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>
-                        {format(new Date(apt.appointment_date), "MMM d, yyyy")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{apt.appointment_time}</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {user?.role === "doctor" &&
-                      (isMobile ? (
-                        <Sheet
-                          open={
-                            isDetailOpen && selectedPatientId === apt.patient_id
-                          }
-                          onOpenChange={(open) => {
-                            if (!open) handleCloseDetail();
-                            else setIsDetailOpen(open);
-                          }}
-                        >
-                          <SheetTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleViewPatient(apt.patient_id)}
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </SheetTrigger>
-                          <SheetContent
-                            side="right"
-                            className="w-full sm:max-w-md p-0"
-                          >
-                            <PatientDetail
-                              patientId={selectedPatientId || undefined}
-                              onClose={handleCloseDetail}
-                            />
-                          </SheetContent>
-                        </Sheet>
-                      ) : (
-                        <Dialog
-                          open={
-                            isDetailOpen && selectedPatientId === apt.patient_id
-                          }
-                          onOpenChange={(open) => {
-                            if (!open) handleCloseDetail();
-                            else setIsDetailOpen(open);
-                          }}
-                        >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleViewPatient(apt.patient_id)}
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl p-0">
-                            <PatientDetail
-                              patientId={selectedPatientId || undefined}
-                              onClose={handleCloseDetail}
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      ))}
+            <>
+              {appointments
+                .slice(0, initialDisplayCount)
+                .map(renderAppointment)}
+
+              {hasManyAppointments && (
+                <Collapsible
+                  open={isCollapsibleOpen}
+                  onOpenChange={setIsCollapsibleOpen}
+                  className="space-y-4"
+                >
+                  <CollapsibleContent className="space-y-4">
+                    {appointments
+                      .slice(initialDisplayCount)
+                      .map(renderAppointment)}
+                  </CollapsibleContent>
+
+                  <CollapsibleTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => handleViewDetails(apt.id)}
+                      className="flex items-center justify-center w-full border-dashed border"
                     >
-                      View Details
+                      {isCollapsibleOpen ? (
+                        <span className="flex items-center">
+                          Show Less{" "}
+                          <ChevronDown className="ml-1 h-4 w-4 rotate-180 transition-transform" />
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          Show {appointments.length - initialDisplayCount} More{" "}
+                          <ChevronDown className="ml-1 h-4 w-4 transition-transform" />
+                        </span>
+                      )}
                     </Button>
-                  </div>
-                </div>
-              </div>
-            ))
+                  </CollapsibleTrigger>
+                </Collapsible>
+              )}
+            </>
           )}
         </div>
       </CardContent>

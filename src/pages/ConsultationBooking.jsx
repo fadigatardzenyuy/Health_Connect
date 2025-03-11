@@ -17,7 +17,7 @@ const ConsultationBookingPage = () => {
         </div>
         <ConsultationBooking />
       </div>
-      <div className="col-span-4">
+      <div className="md:col-span-4 mt-6 md:mt-0">
         <HealthAssistant />
       </div>
     </Layout>
