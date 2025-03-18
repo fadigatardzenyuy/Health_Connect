@@ -13,7 +13,7 @@ export function MobileHeader({ userData }) {
         <AvatarFallback>{userData.initials}</AvatarFallback>
       </Avatar>
       <Link to="/dashboard" className="flex items-center">
-        <h1 className="text-lg font-bold text-primary">WAHPITA</h1>
+        <h1 className="text-lg font-bold text-primary">SHISONG CONNECT</h1>
       </Link>
       <Button variant="ghost" size="icon" asChild>
         <Link to="/settings">

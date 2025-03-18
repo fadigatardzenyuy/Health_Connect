@@ -154,7 +154,7 @@ const Onboarding = () => {
           </span>
         </div>
         <motion.h1 className="text-3xl font-bold text-white leading-tight">
-          WAHPITA
+          SHISONG CONNECT
         </motion.h1>
         <motion.p
           variants={fadeIn}
@@ -346,7 +346,7 @@ const Onboarding = () => {
                   </span>
                 </div>
                 <motion.h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
-                  WAHPITA
+                  SHISONG CONNECT
                 </motion.h1>
                 <motion.p
                   variants={fadeIn}

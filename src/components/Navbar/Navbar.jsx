@@ -18,7 +18,7 @@ export function Navbar({ userData }) {
       <div className="flex items-center gap-4">
         <Link to="/dashboard" className="flex items-center">
           <h1 className="text-xl md:text-2xl font-bold text-primary">
-            WAHPITA
+            SHISONG CONNECT
           </h1>
         </Link>
         <DashboardSwitcher />
