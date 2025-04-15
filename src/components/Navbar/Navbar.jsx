@@ -98,7 +98,7 @@ export function Navbar({ userData }) {
                     href="/medical-history"
                     className="flex items-center text-gray-700 hover:text-primary"
                   >
-                    Medical Services
+                    Medical History
                     <ChevronDown className="ml-1 h-4 w-4" />
                   </a>
                 </li>
