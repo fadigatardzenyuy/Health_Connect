@@ -16,7 +16,9 @@ const AudioConsultation = () => {
         <div className="text-center space-y-4">
           <Phone className="w-16 h-16 mx-auto text-primary" />
           <h1 className="text-2xl font-bold">Audio Consultation</h1>
-          <p className="text-muted-foreground">Talk to your doctor through a secure voice call.</p>
+          <p className="text-muted-foreground">
+            Talk to your doctor through a secure voice call.
+          </p>
           <Button size="lg" className="mt-4">
             Start Voice Call
           </Button>

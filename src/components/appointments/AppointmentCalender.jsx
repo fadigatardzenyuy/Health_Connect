@@ -13,6 +13,7 @@ import {
   Phone,
   User,
   Flag,
+  Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -24,7 +25,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export function AppointmentCalendar({
-  appointments,
+  appointments = [],
   isLoading = false,
   userRole = "patient",
   onDateSelect,
@@ -41,6 +42,7 @@ export function AppointmentCalendar({
     }
   };
 
+  // Filter appointments for the selected date
   const filteredAppointments = appointments.filter((appointment) => {
     if (!selectedDate) return false;
 
@@ -52,10 +54,12 @@ export function AppointmentCalendar({
     );
   });
 
+  // Get dates with appointments for highlighting in calendar
   const appointmentDates = appointments.map(
     (appointment) => new Date(appointment.date)
   );
 
+  // Color assignments for appointment types
   const statusColors = {
     pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
     confirmed: "bg-green-100 text-green-800 hover:bg-green-200",
@@ -72,6 +76,7 @@ export function AppointmentCalendar({
   const typeIcons = {
     video: <Video className="h-4 w-4 text-primary" />,
     audio: <Phone className="h-4 w-4 text-primary" />,
+    "in-person": <Building className="h-4 w-4 text-primary" />,
   };
 
   const handleViewDetails = (id) => {
@@ -96,11 +101,9 @@ export function AppointmentCalendar({
           >
             Today
           </Button>
-          {userRole !== "doctor" && (
-            <Button size="sm" onClick={() => navigate("/consultation-booking")}>
-              Book New
-            </Button>
-          )}
+          <Button size="sm" onClick={() => navigate("/consultation-booking")}>
+            Book New
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-4">
@@ -170,7 +173,11 @@ export function AppointmentCalendar({
                   format(appointment.date, "yyyy-MM-dd") ===
                   format(new Date(), "yyyy-MM-dd");
                 const showJoinButton =
-                  isToday && !isPast && appointment.status === "confirmed";
+                  isToday &&
+                  !isPast &&
+                  appointment.status === "confirmed" &&
+                  (appointment.type === "video" ||
+                    appointment.type === "audio");
 
                 return (
                   <div
@@ -185,12 +192,10 @@ export function AppointmentCalendar({
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-4 w-4 text-primary" />
+                          <Building className="h-4 w-4 text-primary" />
                         </div>
                         <span className="font-medium truncate max-w-[150px]">
-                          {userRole === "doctor"
-                            ? appointment.patientName
-                            : appointment.doctorName}
+                          {appointment.hospitalName || "Hospital"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -207,6 +212,10 @@ export function AppointmentCalendar({
                           </Badge>
                         )}
                       </div>
+                    </div>
+
+                    <div className="text-sm mb-1">
+                      {appointment.departmentName} • {appointment.doctorName}
                     </div>
 
                     <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
@@ -230,7 +239,7 @@ export function AppointmentCalendar({
                         Details
                       </Button>
 
-                      {showJoinButton && (
+                      {showJoinButton && appointment.type !== "in-person" && (
                         <Button
                           size="sm"
                           className="text-xs h-7 px-2"
@@ -255,3 +264,4 @@ export function AppointmentCalendar({
     </Card>
   );
 }
+export default AppointmentCalendar;

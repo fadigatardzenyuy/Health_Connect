@@ -1,8 +1,20 @@
-import { Home, MessageSquare, Search, Bell, User } from "lucide-react";
+import {
+  Home,
+  MessageSquare,
+  Search,
+  Bell,
+  User,
+  Calendar,
+  Building,
+  Hospital,
+} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function MobileNav() {
   const location = useLocation();
+  const { user } = useAuth();
+  const isHospitalAdmin = user?.role === "hospital_admin";
 
   const isActive = (path) => location.pathname === path;
 
@@ -19,23 +31,35 @@ export function MobileNav() {
           <span className="text-xs mt-1">Home</span>
         </Link>
         <Link
-          to="/messages"
+          to="/consultation-booking"
           className={`flex flex-col items-center ${
-            isActive("/messages") ? "text-primary" : "text-gray-500"
-          }`}
-        >
-          <MessageSquare className="h-6 w-6" />
-          <span className="text-xs mt-1">Messages</span>
-        </Link>
-        <Link
-          to="/search"
-          className={`flex flex-col items-center ${
-            isActive("/search") ? "text-primary" : "text-gray-500"
+            isActive("/consultation-booking") ? "text-primary" : "text-gray-500"
           }`}
         >
           <Search className="h-6 w-6" />
-          <span className="text-xs mt-1">Search</span>
+          <span className="text-xs mt-1">Hospitals</span>
         </Link>
+        {isHospitalAdmin ? (
+          <Link
+            to="/hospital-admin"
+            className={`flex flex-col items-center ${
+              isActive("/hospital-admin") ? "text-primary" : "text-gray-500"
+            }`}
+          >
+            <Hospital className="h-6 w-6" />
+            <span className="text-xs mt-1">Admin</span>
+          </Link>
+        ) : (
+          <Link
+            to="/messages"
+            className={`flex flex-col items-center ${
+              isActive("/messages") ? "text-primary" : "text-gray-500"
+            }`}
+          >
+            <MessageSquare className="h-6 w-6" />
+            <span className="text-xs mt-1">Messages</span>
+          </Link>
+        )}
         <Link
           to="/notifications"
           className={`flex flex-col items-center ${
