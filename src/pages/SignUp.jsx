@@ -335,7 +335,7 @@ const SignUp = () => {
                 desc: "Connect with verified healthcare specialists",
               },
               {
-                icon: <ShieldCheck className="w-5 w-5 text-emerald-400 mb-2" />,
+                icon: <ShieldCheck className="w-5 h-5 text-emerald-400 mb-2" />,
                 title: "Secure Records",
                 desc: "Your medical data is always protected",
               },
