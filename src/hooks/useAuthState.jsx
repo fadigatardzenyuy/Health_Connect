@@ -64,12 +64,15 @@ export function useAuthState() {
       setUser({
         id: userData.id,
         name: userData.full_name,
+        full_name: userData.full_name,
         email: userData.email,
         role: userData.role,
         isVerified: userData.is_verified,
         doctorCode: userData.doctor_code,
         avatarUrl: userData.avatar_url,
         specialization: userData.specialization,
+        hospitalName: userData.hospital_name,
+        hospitalId: userData.hospital_id,
       });
     } catch (error) {
       console.error("Error in fetchUserData:", error);
@@ -83,6 +86,6 @@ export function useAuthState() {
     user,
     setUser,
     isLoading,
-    refreshUserData: (userId) => fetchUserData(userId),
+    refreshUserData: fetchUserData,
   };
 }

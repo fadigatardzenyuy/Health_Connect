@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
   Heart,
-  Stethoscope,
+  Hospital,
   Calendar,
   FileText,
   MessageSquare,
@@ -15,6 +15,9 @@ import {
   Lock,
   Award,
   Zap,
+  Ambulance,
+  Bed,
+  ClipboardList,
 } from "lucide-react";
 import AIHealthAssistant from "../components/AIHealthAssistant";
 import { motion } from "framer-motion";
@@ -46,9 +49,9 @@ const Onboarding = () => {
 
   const stats = [
     {
-      icon: <Users className="w-5 h-5 text-emerald-400" />,
-      value: "500+",
-      label: "Providers",
+      icon: <Hospital className="w-5 h-5 text-emerald-400" />,
+      value: "50+",
+      label: "Hospitals",
     },
     {
       icon: <Activity className="w-5 h-5 text-emerald-400" />,
@@ -81,15 +84,15 @@ const Onboarding = () => {
         Patient
       </Button>
       <Button
-        variant={selectedRole === "doctor" ? "solid" : "ghost"}
-        onClick={() => setSelectedRole("doctor")}
+        variant={selectedRole === "hospital-admin" ? "solid" : "ghost"}
+        onClick={() => setSelectedRole("hospital-admin")}
         className={`rounded-full text-xs ${
-          selectedRole === "doctor"
+          selectedRole === "hospital-admin"
             ? "bg-teal-500 text-white"
             : "text-white hover:bg-white/10"
         }`}
       >
-        Provider
+        Hospital
       </Button>
     </div>
   );
@@ -101,7 +104,11 @@ const Onboarding = () => {
       features: [
         {
           icon: <Calendar className="h-3 w-3 mr-1 text-emerald-500" />,
-          text: "Book consultations online",
+          text: "Book hospital appointments",
+        },
+        {
+          icon: <Ambulance className="h-3 w-3 mr-1 text-emerald-500" />,
+          text: "Emergency services access",
         },
         {
           icon: <FileText className="h-3 w-3 mr-1 text-emerald-500" />,
@@ -113,22 +120,26 @@ const Onboarding = () => {
         onClick: () => navigate("/signup?role=patient"),
       },
     },
-    doctor: {
-      icon: <Stethoscope className="h-5 w-5 text-teal-600" />,
-      title: "For Providers",
+    hospital: {
+      icon: <Hospital className="h-5 w-5 text-teal-600" />,
+      title: "For Hospitals",
       features: [
         {
-          icon: <Calendar className="h-3 w-3 mr-1 text-teal-500" />,
-          text: "Manage appointments",
+          icon: <ClipboardList className="h-3 w-3 mr-1 text-teal-500" />,
+          text: "Patient management system",
+        },
+        {
+          icon: <Bed className="h-3 w-3 mr-1 text-teal-500" />,
+          text: "Bed availability tracking",
         },
         {
           icon: <Zap className="h-3 w-3 mr-1 text-teal-500" />,
-          text: "AI-powered diagnostics",
+          text: "AI-powered patient triage",
         },
       ],
       button: {
-        text: "Join as Healthcare Provider",
-        onClick: () => navigate("/signup?role=doctor"),
+        text: "Register Your Hospital",
+        onClick: () => navigate("/signup?role=hospital-admin"),
       },
     },
   };
@@ -154,14 +165,14 @@ const Onboarding = () => {
           </span>
         </div>
         <motion.h1 className="text-3xl font-bold text-white leading-tight">
-          WAHPITA
+          HOSPITAL CONNECT
         </motion.h1>
         <motion.p
           variants={fadeIn}
           custom={1}
           className="text-xs text-emerald-100/90 leading-snug mx-auto"
         >
-          Experience the future of healthcare delivery in Cameroon.
+          Bridging patients and hospitals for better healthcare in Cameroon.
         </motion.p>
       </motion.div>
       <motion.div
@@ -267,14 +278,19 @@ const Onboarding = () => {
             description: "Encrypted medical data",
           },
           {
-            icon: <Zap className="h-5 w-5 text-emerald-400 mb-1" />,
-            title: "AI Diagnostics",
-            description: "Advanced analysis tools",
+            icon: <Ambulance className="h-5 w-5 text-emerald-400 mb-1" />,
+            title: "Emergency Services",
+            description: "Fast hospital connections",
+          },
+          {
+            icon: <Bed className="h-5 w-5 text-emerald-400 mb-1" />,
+            title: "Bed Availability",
+            description: "Real-time hospital capacity",
           },
           {
             icon: <MessageSquare className="h-5 w-5 text-emerald-400 mb-1" />,
-            title: "Telemedicine",
-            description: "Connect with doctors remotely",
+            title: "Hospital Communication",
+            description: "Direct messaging system",
           },
         ].map((feature, i) => (
           <motion.div
@@ -346,18 +362,19 @@ const Onboarding = () => {
                   </span>
                 </div>
                 <motion.h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
-                  WAHPITA
+                  HOSPITAL CONNECT
                 </motion.h1>
                 <motion.p
                   variants={fadeIn}
                   custom={2}
                   className="text-base sm:text-lg text-emerald-100/90 leading-relaxed max-w-2xl mx-auto"
                 >
-                  Experience the future of healthcare delivery in Cameroon.
+                  Bridging patients and hospitals for better healthcare in
+                  Cameroon.
                   <span className="hidden sm:inline">
                     {" "}
-                    Connecting patients with premier healthcare providers
-                    through innovative technology.
+                    Connecting patients with premier hospitals through
+                    innovative technology.
                   </span>
                 </motion.p>
               </motion.div>
@@ -419,7 +436,7 @@ const Onboarding = () => {
                       </Button>
                     </div>
                   </motion.div>
-                  {/* Provider Card */}
+                  {/* Hospital Card */}
                   <motion.div
                     className="group relative"
                     whileHover={{ scale: 1.02 }}
@@ -427,14 +444,14 @@ const Onboarding = () => {
                     <div className="p-4 bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-teal-500/20">
                       <div className="flex items-center mb-3">
                         <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mr-2">
-                          {roleContent.doctor.icon}
+                          {roleContent.hospital.icon}
                         </div>
                         <h3 className="text-lg font-bold text-teal-800">
-                          {roleContent.doctor.title}
+                          {roleContent.hospital.title}
                         </h3>
                       </div>
                       <ul className="space-y-1 text-gray-700 mb-3">
-                        {roleContent.doctor.features.map((item, i) => (
+                        {roleContent.hospital.features.map((item, i) => (
                           <li key={i} className="flex items-center">
                             {item.icon}
                             {item.text}
@@ -442,11 +459,11 @@ const Onboarding = () => {
                         ))}
                       </ul>
                       <Button
-                        onClick={roleContent.doctor.button.onClick}
+                        onClick={roleContent.hospital.button.onClick}
                         variant="outline"
                         className="w-full border-2 border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white"
                       >
-                        {roleContent.doctor.button.text}
+                        {roleContent.hospital.button.text}
                         <ArrowRight className="ml-1 h-4 w-4" />
                       </Button>
                     </div>
@@ -463,7 +480,7 @@ const Onboarding = () => {
                   <Award className="mr-2 h-5 w-5 text-emerald-400" />
                   Premium Features
                 </h2>
-                <div className="grid md:grid-cols-3 gap-3">
+                <div className="grid md:grid-cols-4 gap-3">
                   {[
                     {
                       icon: <Lock className="h-5 w-5 text-emerald-400 mb-1" />,
@@ -471,16 +488,23 @@ const Onboarding = () => {
                       description: "Encrypted medical data",
                     },
                     {
-                      icon: <Zap className="h-5 w-5 text-emerald-400 mb-1" />,
-                      title: "AI Diagnostics",
-                      description: "Advanced analysis tools",
+                      icon: (
+                        <Ambulance className="h-5 w-5 text-emerald-400 mb-1" />
+                      ),
+                      title: "Emergency",
+                      description: "Fast hospital connections",
+                    },
+                    {
+                      icon: <Bed className="h-5 w-5 text-emerald-400 mb-1" />,
+                      title: "Bed Tracking",
+                      description: "Real-time availability",
                     },
                     {
                       icon: (
                         <MessageSquare className="h-5 w-5 text-emerald-400 mb-1" />
                       ),
-                      title: "Telemedicine",
-                      description: "Connect remotely",
+                      title: "Communication",
+                      description: "Direct messaging",
                     },
                   ].map((feature, i) => (
                     <motion.div

@@ -3,11 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
 import {
   Mail,
-  Facebook,
-  Twitter,
-  User,
   Lock,
   ArrowRight,
   Heart,
@@ -15,10 +15,9 @@ import {
   MessageSquare,
   ShieldCheck,
   Clock,
+  Facebook,
+  Twitter,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const SignIn = () => {
@@ -80,19 +79,30 @@ const SignIn = () => {
       if (error) throw error;
 
       // Fetch user profile to determine role
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, full_name")
         .eq("id", data.user.id)
         .single();
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
 
-      // Redirect based on user role
-      navigate(profile?.role === "doctor" ? "/doctor-dashboard" : "/dashboard");
+      // Wait briefly for auth state to update then navigate
+      setTimeout(() => {
+        setIsLoading(false);
+
+        // If user is a hospital admin, check onboarding status
+        if (profile?.role === "hospital_admin") {
+          navigate("/hospital-admin");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 1000);
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -101,7 +111,6 @@ const SignIn = () => {
           error.message || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -202,7 +211,7 @@ const SignIn = () => {
           >
             Welcome to{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              WAHPITA
+              Health Connect Bamenda
             </span>
           </motion.h3>
 

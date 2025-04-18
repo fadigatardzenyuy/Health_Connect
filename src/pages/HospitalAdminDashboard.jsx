@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { AdminLayout } from "@/components/hospital-admin/AdminLayout";
+import { HospitalAdminDashboard as HospitalAdmin } from "@/components/hospital-admin/HospitalAdminDashboard";
 
 export default function HospitalAdminDashboard() {
   const navigate = useNavigate();
@@ -54,18 +55,18 @@ export default function HospitalAdminDashboard() {
   }, [user, navigate, toast]);
 
   // For demo purposes: redirect to onboarding if coming directly to dashboard
-  useEffect(() => {
-    if (!loading && user?.role === "hospital_admin") {
-      const hasCompletedOnboarding = localStorage.getItem("onboardingComplete");
-      if (!hasCompletedOnboarding) {
-        toast({
-          title: "Onboarding Required",
-          description: "Please complete the hospital setup process first.",
-        });
-        navigate("/onboarding");
-      }
-    }
-  }, [loading, user, navigate, toast]);
+  // useEffect(() => {
+  //   if (!loading && user?.role === "hospital_admin") {
+  //     const hasCompletedOnboarding = localStorage.getItem("onboardingComplete");
+  //     if (!hasCompletedOnboarding) {
+  //       toast({
+  //         title: "Onboarding Required",
+  //         description: "Please complete the hospital setup process first.",
+  //       });
+  //       navigate("/onboarding");
+  //     }
+  //   }
+  // }, [loading, user, navigate, toast]);
 
   if (loading) {
     return (

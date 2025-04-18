@@ -39,6 +39,7 @@ import FinancialManagement from "./pages/hospital-admin/FinancialManagement";
 import AnalyticsDashboard from "./pages/hospital-admin/AnalyticsDashboard";
 import MessagesCenter from "./pages/hospital-admin/MessagesCenter";
 import HospitalSettings from "./pages/hospital-admin/HospitalSetting";
+import HospitalOnboarding from "./pages/HospitalOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -122,11 +123,7 @@ const routes = [
 
   {
     path: "/hospital-admin",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <HospitalAdminDashboard />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <HospitalAdminDashboard />,
   },
   {
     path: "/hospital-admin/departments",
@@ -213,6 +210,10 @@ const routes = [
   {
     path: "*",
     element: <Navigate to="/" replace />,
+  },
+  {
+    path: "Hospital-Onboarding",
+    element: <HospitalOnboarding />,
   },
 ];
 
