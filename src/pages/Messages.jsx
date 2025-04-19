@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Layout } from "../components/Layout";
 import { FriendsList } from "@/components/Messaging/FriendLists";
-import RealtimeChat from "@/components/Messaging/RealtimeChat";
+import RealtimeChat from "../components/Messaging/RealtimeChat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -28,12 +28,13 @@ const Messages = () => {
   useEffect(() => {
     // Fetch contacts and chat history
     const loadContacts = () => {
+      // For demo purposes - in a real app, this would come from an API
       const demoContacts = [
         {
           id: "1",
-          name: "Dr. Jane Smith",
+          name: "Hospital Support",
           avatar: "/placeholder.svg",
-          role: "doctor",
+          role: "hospital",
           lastMessage: "How are you feeling today?",
           time: "10:30 AM",
           unread: 2,
@@ -41,19 +42,19 @@ const Messages = () => {
         },
         {
           id: "2",
-          name: "Dr. Robert Chen",
+          name: "Medical Assistance",
           avatar: "/placeholder.svg",
-          role: "doctor",
-          lastMessage: "Your test results look normal.",
+          role: "support",
+          lastMessage: "Your test results are available.",
           time: "Yesterday",
           unread: 0,
           online: false,
         },
         {
           id: "3",
-          name: "Emily Johnson",
+          name: "Appointment Coordinator",
           avatar: "/placeholder.svg",
-          role: "patient",
+          role: "staff",
           lastMessage: "Can I reschedule my appointment?",
           time: "Yesterday",
           unread: 1,
@@ -109,10 +110,9 @@ const Messages = () => {
             </div>
           ) : selectedChat && selectedContact ? (
             <RealtimeChat
-              recipientId={selectedChat}
-              recipientName={selectedContact.name}
-              recipientAvatar={selectedContact.avatar}
-              recipientRole={selectedContact.role}
+              receiverId={selectedChat}
+              receiverName={selectedContact.name}
+              receiverAvatar={selectedContact.avatar}
               onCallStart={handleStartCall}
             />
           ) : (

@@ -1,8 +1,8 @@
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DoctorSearch } from "./DoctorSearch";
+import { HospitalFinder } from "./hospital/HospitalFinder";
 import { SymptomChecker } from "./AIFeatures/SymptomChecker";
 import { HealthAssistant } from "./AIFeatures/HealthAssistant";
-import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { PostForm } from "./posts/PostForm";
 import { PostList } from "./posts/PostList";
@@ -13,14 +13,9 @@ import {
   Plus,
   Users,
   Image,
+  Building,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
@@ -41,6 +36,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,7 +73,7 @@ export function MainFeed() {
   const [communities, setCommunities] = useState([]);
   const [isPostsLoading, setIsPostsLoading] = useState(true);
   const [isCommunitiesLoading, setIsCommunitiesLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("post");
+  const [activeTab, setActiveTab] = useState("hospital");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
   const [isJoiningCommunity, setIsJoiningCommunity] = useState(false);
@@ -98,7 +94,6 @@ export function MainFeed() {
   useEffect(() => {
     fetchPosts();
 
-    // Subscribe to realtime updates for posts
     const channel = supabase
       .channel("public:posts")
       .on(
@@ -110,7 +105,7 @@ export function MainFeed() {
         },
         (payload) => {
           console.log("Change received!", payload);
-          fetchPosts(); // Refresh posts when any change occurs
+          fetchPosts();
         }
       )
       .subscribe((status) => {
@@ -123,7 +118,7 @@ export function MainFeed() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "social") {
+    if (activeTab === "communities") {
       fetchCommunities();
     }
   }, [activeTab]);
@@ -147,7 +142,6 @@ export function MainFeed() {
 
       if (error) throw error;
 
-      // If user is logged in, check which communities they are a member of
       let membershipData = [];
       if (user) {
         const { data: memberData, error: memberError } = await supabase
@@ -162,7 +156,6 @@ export function MainFeed() {
         }
       }
 
-      // Mark which communities the user is a member of
       const communitiesWithMembership =
         data?.map((community) => ({
           ...community,
@@ -224,7 +217,6 @@ export function MainFeed() {
 
       console.log("Raw posts data:", data);
 
-      // Transform the data to match our Post interface
       const transformedPosts = transformPosts(data);
 
       console.log("Posts fetched and transformed:", transformedPosts);
@@ -246,7 +238,6 @@ export function MainFeed() {
     console.log("Raw posts data:", rawPosts);
 
     const transformedPosts = rawPosts.map((post) => {
-      // For each post, extract its author information from the profiles object
       const author = post.profiles || {};
 
       return {
@@ -272,9 +263,9 @@ export function MainFeed() {
   };
 
   const handleRefresh = () => {
-    if (activeTab === "post") {
+    if (activeTab === "posts") {
       fetchPosts();
-    } else if (activeTab === "social") {
+    } else if (activeTab === "communities") {
       fetchCommunities();
     }
   };
@@ -290,7 +281,6 @@ export function MainFeed() {
     }
 
     try {
-      // Insert new community
       const { data, error } = await supabase
         .from("communities")
         .insert({
@@ -304,7 +294,6 @@ export function MainFeed() {
 
       if (error) throw error;
 
-      // Add creator as a member automatically
       const { error: memberError } = await supabase
         .from("community_members")
         .insert({
@@ -323,7 +312,6 @@ export function MainFeed() {
       setIsCreateCommunityOpen(false);
       form.reset();
 
-      // Refresh communities list
       fetchCommunities();
     } catch (error) {
       console.error("Error creating community:", error);
@@ -349,7 +337,6 @@ export function MainFeed() {
       setIsJoiningCommunity(true);
 
       if (community.is_member) {
-        // Leave community
         const { error } = await supabase
           .from("community_members")
           .delete()
@@ -357,7 +344,6 @@ export function MainFeed() {
 
         if (error) throw error;
 
-        // Update members count
         await supabase
           .from("communities")
           .update({ members_count: Math.max(0, community.members_count - 1) })
@@ -368,7 +354,6 @@ export function MainFeed() {
           description: `You have left ${community.name}`,
         });
       } else {
-        // Join community
         const { error } = await supabase.from("community_members").insert({
           community_id: community.id,
           user_id: user.id,
@@ -376,7 +361,6 @@ export function MainFeed() {
 
         if (error) throw error;
 
-        // Update members count
         await supabase
           .from("communities")
           .update({ members_count: community.members_count + 1 })
@@ -388,7 +372,6 @@ export function MainFeed() {
         });
       }
 
-      // Refresh communities list
       fetchCommunities();
     } catch (error) {
       console.error("Error joining/leaving community:", error);
@@ -411,27 +394,43 @@ export function MainFeed() {
     <div className="col-span-12 md:col-span-6 space-y-4">
       <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
         <Tabs
-          defaultValue="post"
+          defaultValue="hospital"
           className="w-full"
           value={activeTab}
           onValueChange={setActiveTab}
         >
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 p-0">
-            <TabsTrigger value="search">Find Doctor</TabsTrigger>
-            <TabsTrigger value="post">Social Feed</TabsTrigger>
-            <TabsTrigger value="ai" className="hidden md:block">
-              AI Assistant
+          <TabsList className="grid w-full grid-cols-4 p-0">
+            <TabsTrigger value="hospital" className="flex items-center gap-1">
+              <Building className="h-4 w-4" />
+              <span>Find Hospital</span>
             </TabsTrigger>
-            <TabsTrigger value="social" className="hidden md:block">
-              Communities
+            <TabsTrigger value="posts" className="flex items-center gap-1">
+              <MessageSquare className="h-4 w-4" />
+              <span>Social Feed</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="flex items-center gap-1">
+              <Star className="h-4 w-4" />
+              <span>AI Assistant</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="communities"
+              className="flex items-center gap-1"
+            >
+              <Users className="h-4 w-4" />
+              <span>Communities</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="search" className="p-4">
-            <DoctorSearch onDoctorSelect={() => {}} />
+          <TabsContent value="hospital" className="p-4">
+            <HospitalFinder
+              onHospitalSelect={(hospitalId) => {
+                console.log("Selected hospital:", hospitalId);
+                window.location.href = `/hospital/${hospitalId}`;
+              }}
+            />
           </TabsContent>
 
-          <TabsContent value="post" className="p-4">
+          <TabsContent value="posts" className="p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">Latest Posts</h2>
               <Button
@@ -457,133 +456,127 @@ export function MainFeed() {
             <HealthAssistant />
           </TabsContent>
 
-          <TabsContent value="social" className="p-4">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Health Communities</h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    className="flex items-center gap-1"
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${
-                        isRefreshing ? "animate-spin" : ""
-                      }`}
-                    />
-                    <span className="hidden md:inline">Refresh</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => setIsCreateCommunityOpen(true)}
-                    className="flex items-center gap-1"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="hidden md:inline">Create Community</span>
-                  </Button>
-                </div>
+          <TabsContent value="communities" className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium">Health Communities</h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="flex items-center gap-1"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  <span>Refresh</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreateCommunityOpen(true)}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Create</span>
+                </Button>
               </div>
+            </div>
 
-              {isCommunitiesLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Card key={i} className="border border-gray-200">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3 animate-pulse">
-                          <Skeleton className="w-12 h-12 rounded-full" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-32" />
-                            <Skeleton className="h-3 w-24" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : communities.length === 0 ? (
-                <Card className="border border-gray-200">
-                  <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-3">
-                    <Users className="h-10 w-10 text-muted-foreground" />
-                    <div>
-                      <h3 className="font-medium text-lg">
-                        No communities yet
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Be the first to create a health community!
-                      </p>
+            {isCommunitiesLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i} className="p-4">
+                    <div className="flex gap-3">
+                      <Skeleton className="h-12 w-12 rounded-md" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-3 w-full" />
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => setIsCreateCommunityOpen(true)}
-                      className="mt-2"
-                    >
-                      Create Community
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {communities.map((community) => (
-                    <Card
-                      key={community.id}
-                      className="cursor-pointer hover:bg-accent/5 transition-colors border border-gray-200"
+                  </Card>
+                ))}
+              </div>
+            ) : communities.length === 0 ? (
+              <div className="text-center p-8">
+                <Users className="mx-auto h-12 w-12 text-gray-300" />
+                <h3 className="mt-4 text-lg font-medium">
+                  No communities found
+                </h3>
+                <p className="mt-2 text-sm text-gray-500">
+                  Be the first to create a health community
+                </p>
+                <Button
+                  onClick={() => setIsCreateCommunityOpen(true)}
+                  className="mt-4"
+                >
+                  Create Community
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {communities.map((community) => (
+                  <Card
+                    key={community.id}
+                    className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <div
+                      className="flex gap-3"
                       onClick={() => openCommunityDetails(community)}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-12 h-12 border-2 border-primary/10">
-                            {community.image_url ? (
-                              <AvatarImage src={community.image_url} />
-                            ) : (
-                              <AvatarFallback className="bg-primary/10 text-primary">
-                                {community.name.charAt(0)}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
+                      <Avatar className="h-12 w-12 rounded-md">
+                        <AvatarImage src={community.image_url} />
+                        <AvatarFallback className="rounded-md bg-primary/10 text-primary">
+                          {community.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
                           <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-medium">{community.name}</h4>
-                              {!community.is_public && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs bg-amber-100 text-amber-800 border-amber-200"
-                                >
-                                  Private
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {community.members_count} members
+                            <h3 className="font-medium">{community.name}</h3>
+                            <p className="text-sm text-gray-500 line-clamp-1">
+                              {community.description}
                             </p>
                           </div>
+                          {!community.is_public && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-100 text-amber-800 border-amber-200"
+                            >
+                              Private
+                            </Badge>
+                          )}
                         </div>
-                      </CardContent>
-                      <CardFooter className="p-0 px-4 pb-4 flex justify-end">
-                        <Button
-                          variant={community.is_member ? "outline" : "default"}
-                          size="sm"
-                          className={community.is_member ? "gap-1" : ""}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleJoinCommunity(community);
-                          }}
-                          disabled={isJoiningCommunity}
-                        >
-                          {community.is_member ? "Joined" : "Join"}
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-xs text-gray-500">
+                            {community.members_count} member
+                            {community.members_count !== 1 ? "s" : ""}
+                          </span>
+                          <Button
+                            variant={
+                              community.is_member ? "outline" : "secondary"
+                            }
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleJoinCommunity(community);
+                            }}
+                            disabled={isJoiningCommunity}
+                          >
+                            {community.is_member ? "Leave" : "Join"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Create Community Dialog */}
       <Dialog
         open={isCreateCommunityOpen}
         onOpenChange={setIsCreateCommunityOpen}
@@ -675,7 +668,6 @@ export function MainFeed() {
         </DialogContent>
       </Dialog>
 
-      {/* Community Details Sheet */}
       <Sheet
         open={isCommunityDetailsOpen}
         onOpenChange={setIsCommunityDetailsOpen}

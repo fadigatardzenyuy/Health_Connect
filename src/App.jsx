@@ -7,42 +7,51 @@ import {
   RouterProvider,
   Navigate,
 } from "react-router-dom";
-// import Index from "./pages/Index";
-import VideoConsultation from "./pages/VideoConsultation";
-import AudioConsultation from "./pages/AudioConsultation";
-import ConsultationBooking from "./pages/ConsultationBooking";
-import DoctorDashboard from "./pages/DoctorDashboard";
-import Messages from "./pages/Messages";
+import { AuthProvider } from "./contexts/AuthContext";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import "./index.css";
+// import { ProtectedHospitalAdminRoute } from "./components/ProtectedHospitalAdminRoute";
 import Onboarding from "./pages/Onboarding";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import EPrescriptions from "./pages/EPrescriptions";
+import Dashboard from "./pages/Dashboard";
+import MedicalHistory from "./pages/MedicalHistory";
+import ConsultationBookingPage from "./pages/ConsultationBooking";
+import Messages from "./pages/Messages";
+import AppointmentDetails from "./pages/AppointmentDetails";
+import EPrescriptionsPage from "./pages/EPrescriptions";
+import VideoConsultation from "./pages/VideoConsultation";
+import AudioConsultation from "./pages/AudioConsultation";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
-import { AuthProvider } from "./contexts/AuthContext";
-import "./index.css";
-import { Analytics } from "@vercel/analytics/react";
+import NotificationPage from "./pages/Notification";
 import AiChatPage from "./pages/AiChatPage";
 import SearchPage from "./pages/SearchPage";
-import NotificationPage from "./pages/Notification";
-import { SpeedInsights } from "@vercel/speed-insights/react";
-import AppointmentDetails from "./pages/AppointmentDetails";
-import Dashboard from "./pages/Dashboard";
+import HospitalDetail from "./pages/HospitalDetail";
+import HospitalAdminDashboard from "./pages/HospitalAdminDashboard";
+import DepartmentOccupancy from "./pages/hospital-admin/DepartmentOccupancy";
+import AppointmentsManagement from "./pages/hospital-admin/AppoitmentsManagement";
+import StaffManagement from "./pages/hospital-admin/StaffManagement";
+import ResourceScheduling from "./pages/hospital-admin/ResourcesScheduling";
+import PatientFlow from "./pages/hospital-admin/PatientFlow";
+import FinancialManagement from "./pages/hospital-admin/FinancialManagement";
+import AnalyticsDashboard from "./pages/hospital-admin/AnalyticsDashboard";
+import MessagesCenter from "./pages/hospital-admin/MessagesCenter";
+import HospitalSettings from "./pages/hospital-admin/HospitalSetting";
+import HospitalOnboarding from "./pages/HospitalOnboarding";
+import HospitalProfile from "./pages/HospitalProfile";
 import Welcome from "./pages/Welcome";
 
-// Create the query client for react-query
 const queryClient = new QueryClient();
 
-// Define your routes
 const routes = [
+  // Public Routes
   {
     path: "/",
-    element: <Navigate to="/onboarding" replace />,
-  },
-  {
-    path: "/onboarding",
     element: <Onboarding />,
   },
+
   {
     path: "/signin",
     element: <SignIn />,
@@ -51,6 +60,8 @@ const routes = [
     path: "/signup",
     element: <SignUp />,
   },
+
+  // Patient Dashboard and Features\
   {
     path: "/welcome",
     element: <Welcome />,
@@ -60,20 +71,24 @@ const routes = [
     element: <Dashboard />,
   },
   {
-    path: "/doctor-dashboard",
-    element: <DoctorDashboard />,
+    path: "/medical-history",
+    element: <MedicalHistory />,
   },
   {
     path: "/consultation-booking",
-    element: <ConsultationBooking />,
-  },
-  {
-    path: "/aiDoc",
-    element: <AiChatPage />,
+    element: <ConsultationBookingPage />,
   },
   {
     path: "/messages",
     element: <Messages />,
+  },
+  {
+    path: "/appointment-details/:id",
+    element: <AppointmentDetails />,
+  },
+  {
+    path: "/eprescriptions",
+    element: <EPrescriptionsPage />,
   },
   {
     path: "/video-consultation/:appointmentId?",
@@ -84,10 +99,6 @@ const routes = [
     element: <AudioConsultation />,
   },
   {
-    path: "/prescriptions",
-    element: <EPrescriptions />,
-  },
-  {
     path: "/profile",
     element: <UserProfile />,
   },
@@ -96,21 +107,86 @@ const routes = [
     element: <Settings />,
   },
   {
-    path: "/search",
-    element: <SearchPage />,
-  },
-  {
     path: "/notifications",
     element: <NotificationPage />,
   },
   {
-    path: "/appointment-details/:id",
-    element: <AppointmentDetails />,
+    path: "/aiDoc",
+    element: <AiChatPage />,
   },
-  // Add more routes as needed...
+  {
+    path: "/search",
+    element: <SearchPage />,
+  },
+
+  // Hospital Details Public View
+  {
+    path: "/hospital/:hospitalId",
+    element: <HospitalDetail />,
+  },
+
+  // Hospital Admin Routes
+
+  {
+    path: "/hospital-admin",
+    element: <HospitalAdminDashboard />,
+  },
+  {
+    path: "/hospital-admin/departments",
+    element: <DepartmentOccupancy />,
+  },
+  {
+    path: "/hospital-admin/appointments",
+    element: <AppointmentsManagement />,
+  },
+  {
+    path: "/hospital-admin/staff",
+    element: <StaffManagement />,
+  },
+  {
+    path: "/hospital-admin/occupancy",
+    element: <DepartmentOccupancy />,
+  },
+  {
+    path: "/hospital-admin/scheduling",
+    element: <ResourceScheduling />,
+  },
+  {
+    path: "/hospital-admin/patient-flow",
+    element: <PatientFlow />,
+  },
+  {
+    path: "/hospital-admin/financial",
+    element: <FinancialManagement />,
+  },
+  {
+    path: "/hospital-admin/analytics",
+    element: <AnalyticsDashboard />,
+  },
+  {
+    path: "/hospital-admin/messages",
+    element: <MessagesCenter />,
+  },
+  {
+    path: "/hospital-admin/settings",
+    element: <HospitalSettings />,
+  },
+  {
+    path: "/hospital-admin/profile",
+    element: <HospitalProfile />,
+  },
+  {
+    path: "/hospital-admin/Onboarding",
+    element: <HospitalOnboarding />,
+  },
+
+  // Fallback Route
+  {
+    path: "*",
+    element: <Navigate to="/" replace />,
+  },
 ];
 
-// Create a browser router
 const router = createBrowserRouter(routes);
 
 const App = () => (

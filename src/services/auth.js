@@ -14,120 +14,180 @@ export async function logoutUser() {
     if (error) throw error;
 }
 
+export async function signUpHospitalAdmin(email, password, fullName, hospitalName, avatarFile = null) {
+    console.log("Signing up hospital admin:", email, fullName, hospitalName);
+
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    role: 'hospital_admin',
+                    hospital_name: hospitalName,
+                },
+            },
+        });
+
+        if (error) throw error;
+        if (!data.user) throw new Error("User creation failed");
+
+        let avatarUrl = null;
+        if (avatarFile) {
+            avatarUrl = await uploadAvatar(data.user.id, avatarFile);
+
+            if (avatarUrl) {
+                const { error: avatarError } = await supabase
+                    .from('profiles')
+                    .update({ avatar_url: avatarUrl })
+                    .eq('id', data.user.id);
+
+                if (avatarError) {
+                    console.error('Error updating profile with avatar:', avatarError);
+                }
+            }
+        }
+
+        return data.user;
+    } catch (error) {
+        console.error("Hospital admin signup error:", error);
+        throw error;
+    }
+}
+
+async function uploadAvatar(userId, avatarFile) {
+    try {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${userId}.${fileExt}`;
+        const filePath = `${userId}/${fileName}`;
+
+        const { error } = await supabase.storage
+            .from('profile-pictures')
+            .upload(filePath, avatarFile);
+
+        if (error) {
+            console.error('Error uploading avatar:', error);
+            return null;
+        }
+
+        const { data } = supabase.storage
+            .from('profile-pictures')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    } catch (error) {
+        console.error('Avatar upload error:', error);
+        return null;
+    }
+}
+
 export async function verifyDoctorCode(code, userId) {
     console.log(`Verifying doctor code ${code} for user ${userId}`);
 
-    // First check if the code exists and is valid
     const { data: verificationData, error: verificationError } = await supabase
-        .from("doctor_verifications")
-        .select("*")
-        .eq("doctor_id", userId)
-        .eq("license_number", code)
+        .from('doctor_verifications')
+        .select('*')
+        .eq('doctor_id', userId)
+        .eq('license_number', code)
         .single();
 
     if (verificationError || !verificationData) {
-        console.error("Verification error:", verificationError);
+        console.error('Verification error:', verificationError);
         throw new Error("Invalid license number");
     }
 
-    // Update verification status
     const { error: updateError } = await supabase
-        .from("doctor_verifications")
+        .from('doctor_verifications')
         .update({
-            status: "verified",
+            status: 'verified',
             verification_date: new Date().toISOString(),
         })
-        .eq("doctor_id", userId)
-        .eq("license_number", code);
+        .eq('doctor_id', userId)
+        .eq('license_number', code);
 
     if (updateError) {
-        console.error("Update verification error:", updateError);
+        console.error('Update verification error:', updateError);
         throw updateError;
     }
 
-    // Update profile verification status
     const { error: profileError } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({ is_verified: true })
-        .eq("id", userId);
+        .eq('id', userId);
 
     if (profileError) {
-        console.error("Update profile error:", profileError);
+        console.error('Update profile error:', profileError);
         throw profileError;
     }
 
-    console.log("Doctor verification successful");
+    console.log('Doctor verification successful');
 }
 
 export async function checkVerificationCode(verificationCode, userId) {
     console.log(`Checking verification code ${verificationCode} for user ${userId}`);
 
     if (!verificationCode || !userId) {
-        console.error("Missing verification code or user ID");
+        console.error('Missing verification code or user ID');
         throw new Error("Missing verification code or user ID");
     }
 
-    // Check if the code exists and is valid for this doctor
     const { data, error } = await supabase
-        .from("doctor_verifications")
-        .select("id")
-        .eq("doctor_id", userId)
-        .eq("verification_code", verificationCode)
+        .from('doctor_verifications')
+        .select('id')
+        .eq('doctor_id', userId)
+        .eq('verification_code', verificationCode)
         .single();
 
     if (error || !data) {
-        console.error("Verification code check error:", error);
+        console.error('Verification code check error:', error);
         throw new Error("Invalid verification code");
     }
 
-    console.log("Found verification record:", data);
+    console.log('Found verification record:', data);
 
-    // Update verification status
     const { error: updateError } = await supabase
-        .from("doctor_verifications")
+        .from('doctor_verifications')
         .update({
-            status: "verified",
-            verification_date: new Date().toISOString(),
+            status: 'verified',
+            verification_date: new Date().toISOString()
         })
-        .eq("id", data.id);
+        .eq('id', data.id);
 
     if (updateError) {
-        console.error("Update verification error:", updateError);
+        console.error('Update verification error:', updateError);
         throw updateError;
     }
 
-    // Update profile verification status
     const { error: profileError } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({ is_verified: true })
-        .eq("id", userId);
+        .eq('id', userId);
 
     if (profileError) {
-        console.error("Update profile error:", profileError);
+        console.error('Update profile error:', profileError);
         throw profileError;
     }
 
-    console.log("Doctor verification successful with verification code");
+    console.log('Doctor verification successful with verification code');
     return true;
 }
 
 export async function resetDoctorVerificationCode(userId) {
     console.log(`Resetting verification code for user ${userId}`);
 
-    // Generate a new verification code (6-digit number)
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Update the doctor verification record
     const { error } = await supabase
-        .from("doctor_verifications")
+        .from('doctor_verifications')
         .update({
             verification_code: verificationCode,
-            status: "pending", // Reset status to pending
+            status: 'pending'
         })
-        .eq("doctor_id", userId);
+        .eq('doctor_id', userId);
 
     if (error) {
-        console.error("Reset verification code error:", error);
+        console.error('Reset verification code error:', error);
         throw error;
     }
 
@@ -154,46 +214,68 @@ export async function updateUserProfile(userId, updates) {
         profileUpdates.specialization = updates.specialization;
     }
 
+    if (updates.hospitalName !== undefined) {
+        profileUpdates.hospital_name = updates.hospitalName;
+    }
+
     const { error } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update(profileUpdates)
-        .eq("id", userId);
+        .eq('id', userId);
 
     if (error) throw error;
 }
 
-// Helper function to check if a doctor is verified
 export async function checkDoctorVerificationStatus(userId) {
     console.log(`Checking verification status for user ${userId}`);
 
     const { data, error } = await supabase
-        .from("profiles")
-        .select("is_verified, role")
-        .eq("id", userId)
+        .from('profiles')
+        .select('is_verified, role')
+        .eq('id', userId)
         .single();
 
     if (error || !data) {
-        console.error("Verification status check error:", error);
+        console.error('Verification status check error:', error);
         return false;
     }
 
-    return data.role === "doctor" && data.is_verified === true;
+    return data.role === 'doctor' && data.is_verified === true;
 }
 
-// Helper function to get doctor verification details
 export async function getDoctorVerificationDetails(userId) {
     console.log(`Getting verification details for user ${userId}`);
 
     const { data, error } = await supabase
-        .from("doctor_verifications")
-        .select("*")
-        .eq("doctor_id", userId)
+        .from('doctor_verifications')
+        .select('*')
+        .eq('doctor_id', userId)
         .single();
 
     if (error) {
-        console.error("Get verification details error:", error);
+        console.error('Get verification details error:', error);
         return null;
     }
 
     return data;
+}
+
+export async function checkHospitalAdminStatus(userId) {
+    console.log(`Checking hospital admin status for user ${userId}`);
+
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('is_verified, role, hospital_id')
+        .eq('id', userId)
+        .single();
+
+    if (error || !data) {
+        console.error('Hospital admin status check error:', error);
+        return { isVerified: false, hospitalId: null };
+    }
+
+    return {
+        isVerified: data.role === 'hospital_admin' && data.is_verified === true,
+        hospitalId: data.hospital_id
+    };
 }

@@ -15,6 +15,7 @@ import {
   Clock,
   MessageSquare,
   Calendar,
+  Building,
 } from "lucide-react";
 import {
   Card,
@@ -26,19 +27,15 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { checkVerificationCode } from "@/services/auth";
+import { signUpHospitalAdmin } from "@/services/auth";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const role = searchParams.get("role") || "patient";
+  const role = searchParams.get("role");
   const [isLoading, setIsLoading] = useState(false);
-  const [licenseError, setLicenseError] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
-  const [showVerificationSection, setShowVerificationSection] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -59,63 +56,19 @@ const SignUp = () => {
 
   const testimonials = [
     {
-      quote: "Health Connect transformed how I manage my health journey!",
-      author: "Esther M.",
+      quote: "Shisong Connect transformed how I manage my health journey!",
+      author: "Fornyuy Gita",
     },
     {
       quote:
         "Quick appointments and professional care - exactly what I needed.",
-      author: "Jean P.",
+      author: "Favout D",
     },
     {
       quote: "The doctors are responsive and the platform is easy to use.",
       author: "Robert K.",
     },
   ];
-
-  const validateLicenseFormat = (license) => {
-    const licenseFormat = /^[A-Z]{2}\d{6}$/;
-    return licenseFormat.test(license);
-  };
-
-  const handleLicenseChange = (e) => {
-    const value = e.target.value.toUpperCase();
-    e.target.value = value;
-    if (value && !validateLicenseFormat(value)) {
-      setLicenseError(
-        "License must be 2 uppercase letters followed by 6 digits (e.g., AB123456)"
-      );
-    } else {
-      setLicenseError("");
-    }
-  };
-
-  const createDoctorVerification = async (userId, licenseNumber) => {
-    try {
-      const verificationCode = Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-      const { data, error } = await supabase
-        .from("doctor_verifications")
-        .insert({
-          doctor_id: userId,
-          license_number: licenseNumber,
-          verification_code: verificationCode,
-          status: "pending",
-        })
-        .select();
-
-      if (error) {
-        console.error("Error creating verification record:", error);
-        throw error;
-      }
-
-      return verificationCode;
-    } catch (error) {
-      console.error("Verification record creation error:", error);
-      throw error;
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -127,7 +80,7 @@ const SignUp = () => {
       const email = formData.get("email");
       const password = formData.get("password");
       const fullName = formData.get("name");
-      const license = formData.get("license")?.toUpperCase();
+      const hospitalName = formData.get("hospitalName");
 
       if (!email || !password || !fullName) {
         toast({
@@ -139,25 +92,55 @@ const SignUp = () => {
         return;
       }
 
-      if (role === "doctor" && (!license || !validateLicenseFormat(license))) {
+      if (role === "hospital-admin" && !hospitalName) {
         toast({
-          title: "Invalid License Format",
-          description:
-            "Please enter a valid license number (2 uppercase letters followed by 6 digits)",
+          title: "Missing Hospital Name",
+          description: "Please provide the name of your hospital",
           variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
 
+      console.log("Attempting signup for role:", role);
+
+      if (role === "hospital-admin") {
+        try {
+          await signUpHospitalAdmin(email, password, fullName, hospitalName);
+
+          toast({
+            title: "Hospital Admin Account Created",
+            description:
+              "Welcome to Health Connect! You can now manage your hospital.",
+          });
+
+          setTimeout(() => {
+            navigate("/hospital-admin/Onboarding");
+          }, 1500);
+
+          return;
+        } catch (error) {
+          console.error("Hospital admin signup error:", error);
+          toast({
+            title: "Signup Failed",
+            description:
+              error.message ||
+              "There was an error creating your hospital admin account",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Regular signup process for patient role
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-            role: role,
-            ...(role === "doctor" && { license_number: license }),
+            role: "patient",
           },
         },
       });
@@ -191,88 +174,34 @@ const SignUp = () => {
         return;
       }
 
-      await supabase.from("profiles").upsert({
+      const { error: profileError } = await supabase.from("profiles").upsert({
         id: data.user.id,
         full_name: fullName,
         email: email,
-        role: role,
-        is_verified: role !== "doctor",
-        medical_license: role === "doctor" ? license : null,
-        patient_id:
-          role === "patient"
-            ? `PT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-            : null,
+        role: "patient",
+        is_verified: true,
+        patient_id: `PT-${Math.random()
+          .toString(36)
+          .substring(2, 10)
+          .toUpperCase()}`,
       });
 
-      if (role === "doctor") {
-        setUserId(data.user.id);
-        try {
-          const code = await createDoctorVerification(data.user.id, license);
-          toast({
-            title: "Account created successfully",
-            description: "Please use your verification code to complete setup",
-          });
-          setShowVerificationSection(true);
-          toast({
-            title: "Your verification code",
-            description: `For demo purposes, here is your code: ${code}`,
-          });
-        } catch (verificationError) {
-          toast({
-            title: "Account created with warnings",
-            description:
-              "Your account was created but there was an issue with doctor verification. Please contact support.",
-            variant: "destructive",
-          });
-          setShowVerificationSection(true);
-        }
-      } else {
-        toast({
-          title: "Account created successfully",
-          description: "Welcome to Health Connect!",
-        });
-        navigate("/welcome");
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
       }
+
+      toast({
+        title: "Account created successfully",
+        description: "Welcome to Health Connect!",
+      });
+
+      setTimeout(() => {
+        navigate("/welcome");
+      }, 1500);
     } catch (error) {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerificationSubmit = async (e) => {
-    e.preventDefault();
-    if (isLoading || !userId) return;
-    setIsLoading(true);
-
-    try {
-      if (!verificationCode || verificationCode.length !== 6) {
-        toast({
-          title: "Invalid Code",
-          description: "Please enter a valid 6-digit verification code",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      await checkVerificationCode(verificationCode, userId);
-      toast({
-        title: "Verification Successful",
-        description: "Your doctor account has been verified.",
-      });
-      navigate("/doctor-dashboard");
-    } catch (error) {
-      toast({
-        title: "Verification Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "An error occurred during verification. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -285,69 +214,8 @@ const SignUp = () => {
       title: "Coming Soon",
       description: `Sign up with ${provider} functionality will be available soon!`,
     });
-    navigate(role === "doctor" ? "/doctor-dashboard" : "/dashboard");
+    navigate(role === "hospital-admin" ? "/hospital-dashboard" : "/dashboard");
   };
-
-  if (showVerificationSection) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-accent/10 to-secondary/5 py-12 px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-md w-full"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Doctor Verification</CardTitle>
-              <CardDescription>
-                Enter the verification code to complete your doctor account
-                setup
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleVerificationSubmit} className="space-y-6">
-                <div>
-                  <Label htmlFor="verificationCode">Verification Code</Label>
-                  <Input
-                    id="verificationCode"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    placeholder="Enter 6-digit code"
-                    required
-                    maxLength={6}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Enter the 6-digit verification code shown in the
-                    notification.
-                  </p>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Verifying..." : "Verify Code"}
-                </Button>
-
-                <div className="text-center text-sm">
-                  <Button
-                    variant="link"
-                    className="text-primary p-0"
-                    onClick={() => setShowVerificationSection(false)}
-                    type="button"
-                  >
-                    Go back to signup
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -434,7 +302,7 @@ const SignUp = () => {
           >
             Welcome to{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              WAHPITA
+              Shisong Connect
             </span>
           </motion.h3>
 
@@ -502,7 +370,6 @@ const SignUp = () => {
               </motion.div>
             ))}
           </motion.div>
-
           {/* Testimonials Section */}
           <motion.div
             variants={fadeIn}
@@ -555,8 +422,8 @@ const SignUp = () => {
               Create your account
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              {role === "doctor"
-                ? "Join our network of healthcare professionals"
+              {role === "hospital-admin"
+                ? "Join our network of healthcare providers"
                 : "Start your health journey with us"}
             </p>
           </motion.div>
@@ -625,33 +492,24 @@ const SignUp = () => {
                 </div>
               </div>
 
-              {role === "doctor" && (
+              {role === "hospital-admin" && (
                 <div>
-                  <Label htmlFor="license" className="text-gray-700">
-                    Medical License Number
+                  <Label htmlFor="hospitalName" className="text-gray-700">
+                    Hospital Name
                   </Label>
                   <div className="mt-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <ShieldCheck className="h-5 w-5 text-gray-400" />
+                      <Building className="h-5 w-5 text-gray-400" />
                     </div>
                     <Input
-                      id="license"
-                      name="license"
+                      id="hospitalName"
+                      name="hospitalName"
                       type="text"
                       required
-                      maxLength={8}
-                      onChange={handleLicenseChange}
-                      className={`pl-10 uppercase focus:ring-emerald-500 focus:border-emerald-500 ${
-                        licenseError ? "border-destructive" : ""
-                      }`}
-                      placeholder="AB123456"
+                      className="pl-10 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="General Hospital"
                     />
                   </div>
-                  {licenseError && (
-                    <p className="text-sm text-destructive mt-1">
-                      {licenseError}
-                    </p>
-                  )}
                 </div>
               )}
 
@@ -669,51 +527,40 @@ const SignUp = () => {
             </form>
 
             <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
+              <div className="mt-6">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">
+                      Or sign in with
+                    </span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Or sign up with
-                  </span>
-                </div>
-              </div>
 
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <Button
-                  variant="outline"
-                  className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
-                  onClick={() => handleSocialSignIn("Google")}
-                >
-                  <Mail className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
-                  onClick={() => handleSocialSignIn("Facebook")}
-                >
-                  <Facebook className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
-                  onClick={() => handleSocialSignIn("Twitter")}
-                >
-                  <Twitter className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Already have an account?
-                  </span>
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
+                    onClick={() => handleSocialSignIn("Google")}
+                  >
+                    <Mail className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
+                    onClick={() => handleSocialSignIn("Facebook")}
+                  >
+                    <Facebook className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
+                    onClick={() => handleSocialSignIn("Twitter")}
+                  >
+                    <Twitter className="w-5 h-5" />
+                  </Button>
                 </div>
               </div>
 

@@ -16,7 +16,9 @@ const VideoConsultation = () => {
         <div className="text-center space-y-4">
           <VideoIcon className="w-16 h-16 mx-auto text-primary" />
           <h1 className="text-2xl font-bold">Video Consultation</h1>
-          <p className="text-muted-foreground">Connect with your doctor face-to-face through secure video call.</p>
+          <p className="text-muted-foreground">
+            Connect with your doctor face-to-face through secure video call.
+          </p>
           <Button size="lg" className="mt-4">
             Start Video Call
           </Button>

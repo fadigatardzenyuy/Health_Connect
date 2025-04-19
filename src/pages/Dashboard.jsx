@@ -1,20 +1,24 @@
 import { Layout } from "@/components/Layout";
 import { Sidebar } from "@/components/Sidebar";
-import { MainFeed } from "@/components/MainFeed";
-import { AppointmentsSidebar } from "@/components/AppointmentsSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowRightFromLine } from "lucide-react";
-
 import { PatientHealthSummary } from "@/components/patient/PatientHealthSummary";
-import { AppointmentCalendar } from "../components/appointments/AppointmentCalender";
+import { MainFeed } from "@/components/MainFeed";
+import { useToast } from "@/hooks/use-toast";
+import HospitalAdminDashboard from "./HospitalAdminDashboard";
+import { Card, CardContent } from "@/components/ui/card";
+import { Activity, AlertCircle, Bell, Calendar } from "lucide-react";
 
-const Index = () => {
+const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [emergencyAlerts, setEmergencyAlerts] = useState([
+    "Heavy rainfall warning for Bamenda - Be careful on roads to hospitals",
+    "COVID-19 vaccination available at Bamenda Regional Hospital",
+  ]);
 
   useEffect(() => {
     // Verify user is authenticated
@@ -35,29 +39,32 @@ const Index = () => {
     checkAuth();
   }, [user, navigate]);
 
-  // Show doctor dashboard switch button if user is a doctor
-  const DoctorDashboardSwitch = user?.role === "doctor" && (
-    <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg shadow-sm">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-medium text-primary">
-            Doctor Dashboard Available
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Switch to your doctor dashboard for professional tools
-          </p>
-        </div>
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => navigate("/doctor-dashboard")}
-          className="gap-1"
-        >
-          Switch <ArrowRightFromLine className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
+  // Redirect users if they haven't completed onboarding
+  useEffect(() => {
+    if (user && !loading) {
+      // Check if new patient needs to be onboarded
+      const hasCompletedOnboarding = localStorage.getItem(
+        "patientOnboardingComplete"
+      );
+      // if (user.role === "patient" && !hasCompletedOnboarding) {
+      //   navigate("/welcome");
+      //   return;
+      // }
+
+      // Check if hospital admin needs to complete setup
+      if (user.role === "hospital_admin") {
+        const hasCompletedSetup = localStorage.getItem("onboardingComplete");
+        if (!hasCompletedSetup) {
+          toast({
+            title: "Complete Hospital Setup",
+            description: "Please complete your hospital profile setup first.",
+          });
+          navigate("/onboarding");
+          return;
+        }
+      }
+    }
+  }, [user, loading, navigate, toast]);
 
   if (loading) {
     return (
@@ -72,36 +79,83 @@ const Index = () => {
     );
   }
 
+  // Check if user is a hospital admin
+  const isHospitalAdmin = user?.role === "hospital_admin";
+
+  // Render hospital admin dashboard if user is admin
+  if (isHospitalAdmin) {
+    return (
+      <Layout>
+        <div className="col-span-12">
+          <HospitalAdminDashboard />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Regular patient dashboard
   return (
     <Layout>
       <div className="col-span-12 lg:col-span-3 xl:col-span-2">
         <Sidebar />
       </div>
-      <div className="col-span-12 lg:col-span-6 xl:col-span-7 space-y-6">
-        {DoctorDashboardSwitch}
+      <div className="col-span-12 lg:col-span-6 xl:col-span-7">
+        {emergencyAlerts.length > 0 && (
+          <Card className="mb-4 border-amber-300 bg-amber-50">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div className="space-y-2">
+                  <h3 className="font-medium text-amber-800">Local Alerts</h3>
+                  {emergencyAlerts.map((alert, i) => (
+                    <p key={i} className="text-sm text-amber-700">
+                      {alert}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <MainFeed />
-
-        {/* Calendar for appointment management */}
-        <div className="mb-6">
-          <AppointmentCalendar
-            appointments={[]}
-            userRole={user?.role}
-            onDateSelect={(date) => {
-              console.log("Selected date:", date);
-            }}
-          />
-        </div>
       </div>
       <div className="col-span-12 lg:col-span-3 space-y-6">
-        {/* Show different content based on user role */}
-        {user?.role === "doctor" ? (
-          <PatientHealthSummary />
-        ) : (
-          <AppointmentsSidebar userId={user?.id} />
-        )}
+        <PatientHealthSummary />
+
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <h3 className="font-medium flex items-center">
+              <Bell className="h-4 w-4 mr-2 text-primary" />
+              Local Health Events
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span>Free Malaria Testing</span>
+                <span className="text-xs text-gray-500 flex items-center">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Apr 15
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span>Maternal Health Workshop</span>
+                <span className="text-xs text-gray-500 flex items-center">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Apr 20
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Community Health Fair</span>
+                <span className="text-xs text-gray-500 flex items-center">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  May 5
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
 };
 
-export default Index;
+export default Dashboard;

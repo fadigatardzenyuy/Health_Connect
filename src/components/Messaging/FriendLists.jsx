@@ -4,37 +4,36 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 
 export function FriendsList({ onChatSelect, selectedChat }) {
-  // Sample friends data - in a real app, this would come from an API or database
   const friends = [
     {
       id: "1",
-      name: "Dr. Jane Smith",
+      name: "Hospital Support",
       avatar: "/placeholder.svg",
       lastMessage: "How are you feeling today?",
       time: "10:30 AM",
       unread: 2,
       online: true,
-      role: "doctor",
+      role: "support",
     },
     {
       id: "2",
-      name: "Dr. Robert Chen",
+      name: "Medical Assistance",
       avatar: "/placeholder.svg",
-      lastMessage: "Your test results look normal.",
+      lastMessage: "Your test results are available.",
       time: "Yesterday",
       unread: 0,
       online: false,
-      role: "doctor",
+      role: "support",
     },
     {
       id: "3",
-      name: "Emily Johnson",
+      name: "Appointment Coordinator",
       avatar: "/placeholder.svg",
       lastMessage: "Can I reschedule my appointment?",
       time: "Yesterday",
       unread: 1,
       online: true,
-      role: "patient",
+      role: "staff",
     },
   ];
 
