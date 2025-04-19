@@ -11,7 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import "./index.css";
-import { ProtectedHospitalAdminRoute } from "./components/ProtectedHospitalAdminRoute";
+// import { ProtectedHospitalAdminRoute } from "./components/ProtectedHospitalAdminRoute";
 import Onboarding from "./pages/Onboarding";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -40,6 +40,7 @@ import AnalyticsDashboard from "./pages/hospital-admin/AnalyticsDashboard";
 import MessagesCenter from "./pages/hospital-admin/MessagesCenter";
 import HospitalSettings from "./pages/hospital-admin/HospitalSetting";
 import HospitalOnboarding from "./pages/HospitalOnboarding";
+import HospitalProfile from "./pages/HospitalProfile";
 
 const queryClient = new QueryClient();
 
@@ -127,93 +128,57 @@ const routes = [
   },
   {
     path: "/hospital-admin/departments",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <DepartmentOccupancy />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <DepartmentOccupancy />,
   },
   {
     path: "/hospital-admin/appointments",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <AppointmentsManagement />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <AppointmentsManagement />,
   },
   {
     path: "/hospital-admin/staff",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <StaffManagement />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <StaffManagement />,
   },
   {
     path: "/hospital-admin/occupancy",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <DepartmentOccupancy />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <DepartmentOccupancy />,
   },
   {
     path: "/hospital-admin/scheduling",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <ResourceScheduling />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <ResourceScheduling />,
   },
   {
     path: "/hospital-admin/patient-flow",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <PatientFlow />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <PatientFlow />,
   },
   {
     path: "/hospital-admin/financial",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <FinancialManagement />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <FinancialManagement />,
   },
   {
     path: "/hospital-admin/analytics",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <AnalyticsDashboard />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <AnalyticsDashboard />,
   },
   {
     path: "/hospital-admin/messages",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <MessagesCenter />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <MessagesCenter />,
   },
   {
     path: "/hospital-admin/settings",
-    element: (
-      <ProtectedHospitalAdminRoute>
-        <HospitalSettings />
-      </ProtectedHospitalAdminRoute>
-    ),
+    element: <HospitalSettings />,
+  },
+  {
+    path: "/hospital-admin/profile",
+    element: <HospitalProfile />,
+  },
+  {
+    path: "/hospital-admin/Onboarding",
+    element: <HospitalOnboarding />,
   },
 
   // Fallback Route
   {
     path: "*",
     element: <Navigate to="/" replace />,
-  },
-  {
-    path: "Hospital-Onboarding",
-    element: <HospitalOnboarding />,
   },
 ];
 

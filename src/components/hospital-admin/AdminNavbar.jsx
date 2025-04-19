@@ -450,7 +450,7 @@ export const AdminNavbar = () => {
                 <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/hospital-admin/profile")}
                   className="py-2"
                 >
                   <User className="mr-2 h-4 w-4 text-primary" />

@@ -56,13 +56,13 @@ const SignUp = () => {
 
   const testimonials = [
     {
-      quote: "Health Connect transformed how I manage my health journey!",
-      author: "Esther M.",
+      quote: "Shisong Connect transformed how I manage my health journey!",
+      author: "Fornyuy Gita",
     },
     {
       quote:
         "Quick appointments and professional care - exactly what I needed.",
-      author: "Jean P.",
+      author: "Favout D",
     },
     {
       quote: "The doctors are responsive and the platform is easy to use.",
@@ -115,7 +115,7 @@ const SignUp = () => {
           });
 
           setTimeout(() => {
-            navigate("/Hospital-Onboarding");
+            navigate("/hospital-admin/Onboarding");
           }, 1500);
 
           return;
@@ -302,7 +302,7 @@ const SignUp = () => {
           >
             Welcome to{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              Health Connect
+              Shisong Connect
             </span>
           </motion.h3>
 
@@ -369,6 +369,38 @@ const SignUp = () => {
                 </div>
               </motion.div>
             ))}
+          </motion.div>
+          {/* Testimonials Section */}
+          <motion.div
+            variants={fadeIn}
+            custom={7}
+            className="mt-8 border-t border-emerald-400/20 pt-6"
+          >
+            <h4 className="text-lg font-semibold mb-3">What Our Users Say</h4>
+            <div className="relative h-24 overflow-hidden">
+              {testimonials.map((testimonial, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      delay: 0.8 + index * 0.1,
+                      duration: 0.5,
+                    },
+                  }}
+                  className="text-center"
+                >
+                  <p className="italic text-emerald-100/90">
+                    "{testimonial.quote}"
+                  </p>
+                  <p className="mt-2 font-medium text-emerald-400">
+                    - {testimonial.author}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </motion.div>
@@ -495,14 +527,40 @@ const SignUp = () => {
             </form>
 
             <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
+              <div className="mt-6">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">
+                      Or sign in with
+                    </span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Already have an account?
-                  </span>
+
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
+                    onClick={() => handleSocialSignIn("Google")}
+                  >
+                    <Mail className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
+                    onClick={() => handleSocialSignIn("Facebook")}
+                  >
+                    <Facebook className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition duration-200"
+                    onClick={() => handleSocialSignIn("Twitter")}
+                  >
+                    <Twitter className="w-5 h-5" />
+                  </Button>
                 </div>
               </div>
 
