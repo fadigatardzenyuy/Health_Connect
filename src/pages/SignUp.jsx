@@ -196,7 +196,7 @@ const SignUp = () => {
       });
 
       setTimeout(() => {
-        navigate("/Dashboard");
+        navigate("/welcome");
       }, 1500);
     } catch (error) {
       toast({

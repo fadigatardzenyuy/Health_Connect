@@ -117,7 +117,7 @@ const Welcome = () => {
   const quickStartTasks = [
     { title: "Complete your profile", completed: false },
     { title: "Add your medical history", completed: false },
-    { title: "Connect with a doctor", completed: false },
+    { title: "Connect with a hospital", completed: false },
     { title: "Set up notifications", completed: false },
   ];
 
@@ -218,7 +218,7 @@ const Welcome = () => {
               variant="outline"
               className="px-4 py-2 bg-background/80 backdrop-blur-sm shadow-md text-primary font-medium text-lg rounded-full"
             >
-              <Heart className="w-5 h-5 mr-2 text-primary" /> Health Connect
+              <Heart className="w-5 h-5 mr-2 text-primary" /> Shisong Connect
             </Badge>
           </motion.div>
         </div>
@@ -416,12 +416,7 @@ const Welcome = () => {
                           <div
                             key={index}
                             className={`p-4 rounded-lg bg-gradient-to-br ${feature.color} flex flex-col items-center text-center`}
-                          >
-                            {feature.icon.type({ className: "w-8 h-8 mb-2" })}
-                            <span className="text-sm font-medium">
-                              {feature.title}
-                            </span>
-                          </div>
+                          ></div>
                         ))}
                       </div>
                     </motion.div>
@@ -463,7 +458,8 @@ const Welcome = () => {
 
                   <div className="text-center mt-6">
                     <p className="text-sm text-muted-foreground mb-4">
-                      Complete these tasks to get the most out of Health Connect
+                      Complete these tasks to get the most out of Shisong
+                      Connect
                     </p>
                     <Button
                       variant="outline"

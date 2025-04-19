@@ -41,6 +41,7 @@ import MessagesCenter from "./pages/hospital-admin/MessagesCenter";
 import HospitalSettings from "./pages/hospital-admin/HospitalSetting";
 import HospitalOnboarding from "./pages/HospitalOnboarding";
 import HospitalProfile from "./pages/HospitalProfile";
+import Welcome from "./pages/Welcome";
 
 const queryClient = new QueryClient();
 
@@ -60,7 +61,11 @@ const routes = [
     element: <SignUp />,
   },
 
-  // Patient Dashboard and Features
+  // Patient Dashboard and Features\
+  {
+    path: "/welcome",
+    element: <Welcome />,
+  },
   {
     path: "/dashboard",
     element: <Dashboard />,
